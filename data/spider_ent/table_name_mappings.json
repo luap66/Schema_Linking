@@ -1,0 +1,1467 @@
+{
+  "climbing": {
+    "mountain": "xelion11_clmb_mnt_mountain",
+    "climber": "xelion11_clmb_climbr_perf"
+  },
+  "browser_web": {
+    "Web_client_accelerator": "xelion19_clacc_acc_client_accelerator",
+    "browser": "xelion19_clacc_brws_browser",
+    "accelerator_compatible_browser": "xelion19_clacc_acc_browser_compat"
+  },
+  "architecture": {
+    "architect": "xelion42_bridom_architect",
+    "bridge": "xelion42_bridom_brg_structure",
+    "mill": "xelion42_bridom_millreg"
+  },
+  "coffee_shop": {
+    "shop": "zyntra_coffe_shp_location",
+    "member": "zyntra_coffe_usr_membership",
+    "happy_hour": "zyntra_coffe_hh_event",
+    "happy_hour_member": "zyntra_coffe_hh_member_spending"
+  },
+  "allergy_1": {
+    "Allergy_Type": "zentra66_algy_allergy_type",
+    "Has_Allergy": "zentra66_algy_stu_allergy",
+    "Student": "zentra66_algy_stdnt_profile"
+  },
+  "cinema": {
+    "film": "zentra11_cimax_film",
+    "cinema": "zentra11_cimax_cinema",
+    "schedule": "zentra11_cimax_scrn_schedule"
+  },
+  "club_1": {
+    "Student": "xelion45_clmgr_stdnt_profile",
+    "Club": "xelion45_clmgr_club_adm",
+    "Member_of_club": "xelion45_clmgr_mbrsh_club_member"
+  },
+  "book_2": {
+    "publication": "zentra11_bkpub_pub_details",
+    "book": "zentra11_bkpub_bk_book"
+  },
+  "body_builder": {
+    "body_builder": "zentra51_fitmgr_athl_performance",
+    "people": "zentra51_fitmgr_athlete"
+  },
+  "city_record": {
+    "city": "zentra2_cityr_city",
+    "match": "zentra2_cityr_mch_match",
+    "temperature": "zentra2_cityr_clm_temperature",
+    "hosting_city": "zentra2_cityr_mch_hosting"
+  },
+  "aircraft": {
+    "pilot": "zentos_aircap_pilot",
+    "aircraft": "zentos_aircap_aircraft",
+    "match": "zentos_aircap_evt_competition_result",
+    "airport": "zentos_aircap_airport",
+    "airport_aircraft": "zentos_aircap_air_acft"
+  },
+  "bike_1": {
+    "station": "zentos_bikez_stn_metadata",
+    "status": "zentos_bikez_stn_status",
+    "trip": "zentos_bikez_trip_analytics",
+    "weather": "zentos_bikez_env_weather"
+  },
+  "candidate_poll": {
+    "candidate": "zentra27_polly_cand_polling",
+    "people": "zentra27_polly_ppl_demographics"
+  },
+  "battle_death": {
+    "battle": "xelion5_navdb_btl_battle",
+    "ship": "xelion5_navdb_shp_ship",
+    "death": "xelion5_navdb_cas_death"
+  },
+  "activity_1": {
+    "Activity": "xelion45_actmgmt_act_activity",
+    "Participates_in": "xelion45_actmgmt_usr_activity_participation",
+    "Faculty_Participates_in": "xelion45_actmgmt_fclt_participation",
+    "Student": "xelion45_actmgmt_stdnt_profile",
+    "Faculty": "xelion45_actmgmt_faculty"
+  },
+  "course_teach": {
+    "course": "zentra10_crsmgt_crs_details",
+    "teacher": "zentra10_crsmgt_tchr_profile",
+    "course_arrange": "zentra10_crsmgt_crs_assignment"
+  },
+  "company_1": {
+    "works_on": "xelion17_hrms_usr_project_assignment",
+    "employee": "xelion17_hrms_usr_employee",
+    "department": "xelion17_hrms_dept_info",
+    "project": "xelion17_hrms_prjct_info",
+    "dependent": "xelion17_hrms_emp_dependent",
+    "dept_locations": "xelion17_hrms_dept_location"
+  },
+  "apartment_rentals": {
+    "Apartment_Buildings": "zentra5_aprt_bldg_info",
+    "Apartments": "zentra5_aprt_unit_inventory",
+    "Apartment_Facilities": "zentra5_aprt_facility_link",
+    "Guests": "zentra5_aprt_gst_profile",
+    "Apartment_Bookings": "zentra5_aprt_bkg_reservations",
+    "View_Unit_Status": "zentra5_aprt_apt_availability"
+  },
+  "concert_singer": {
+    "stadium": "zentra11_concer_ven_stadium",
+    "singer": "zentra11_concer_artst_profile",
+    "concert": "zentra11_concer_evt_concert",
+    "singer_in_concert": "zentra11_concer_singer_in_concert"
+  },
+  "chinook_1": {
+    "Album": "zentra11_music_mus_album",
+    "Artist": "zentra11_music_mus_artist",
+    "Customer": "zentra11_music_crm_customer",
+    "Employee": "zentra11_music_emp_profile",
+    "Genre": "zentra11_music_mus_genre",
+    "Invoice": "zentra11_music_txn_invoice",
+    "InvoiceLine": "zentra11_music_txn_invoice_line",
+    "MediaType": "zentra11_music_mdt_media_type",
+    "Playlist": "zentra11_music_plst",
+    "PlaylistTrack": "zentra11_music_plst_track",
+    "Track": "zentra11_music_trk_metadata"
+  },
+  "college_3": {
+    "Student": "xelion45_coll_stdnt_profile",
+    "Faculty": "xelion45_coll_faculty",
+    "Department": "xelion45_coll_dept_info",
+    "Member_of": "xelion45_coll_fac_member",
+    "Course": "xelion45_coll_crs_offering",
+    "Minor_in": "xelion45_coll_std_minor",
+    "Enrolled_in": "xelion45_coll_enr_enrollment",
+    "Gradeconversion": "xelion45_coll_grd_conversion"
+  },
+  "college_1": {
+    "CLASS": "zentra10_collg_cls_offering",
+    "COURSE": "zentra10_collg_acad_course",
+    "DEPARTMENT": "zentra10_collg_acad_department",
+    "EMPLOYEE": "zentra10_collg_usr_employee",
+    "ENROLL": "zentra10_collg_stu_enrollment",
+    "PROFESSOR": "zentra10_collg_emp_professor",
+    "STUDENT": "zentra10_collg_stdnt_profile"
+  },
+  "company_employee": {
+    "people": "xelion17_empdom_usr_profile",
+    "company": "xelion17_empdom_com_company",
+    "employment": "xelion17_empdom_usr_employment"
+  },
+  "cre_Docs_and_Epenses": {
+    "Ref_Document_Types": "zentor1_docex_ref_document_types",
+    "Ref_Budget_Codes": "zentor1_docex_ref_budget_categories",
+    "Projects": "zentor1_docex_prj_details",
+    "Documents": "zentor1_docex_doc_metadata",
+    "Statements": "zentor1_docex_finance_statement",
+    "Documents_with_Expenses": "zentor1_docex_doc_expense_assoc",
+    "Accounts": "zentor1_docex_acct_accounts"
+  },
+  "academic": {
+    "author": "xelion4_acad_authr",
+    "conference": "xelion4_acad_cnf_conference",
+    "domain": "xelion4_acad_knowledge_domain",
+    "domain_author": "xelion4_acad_dmn_author",
+    "domain_conference": "xelion4_acad_domain_conference",
+    "journal": "xelion4_acad_jnl",
+    "domain_journal": "xelion4_acad_domain_journal",
+    "keyword": "xelion4_acad_kwd",
+    "domain_keyword": "xelion4_acad_kwd_domain",
+    "publication": "xelion4_acad_pub_publication",
+    "domain_publication": "xelion4_acad_pub_domain",
+    "organization": "xelion4_acad_org_organization",
+    "publication_keyword": "xelion4_acad_publ_keyword",
+    "writes": "xelion4_acad_usr_author_publication_link",
+    "cite": "xelion4_acad_pub_citation"
+  },
+  "company_office": {
+    "buildings": "zyntra_ofc_bldg_info",
+    "Companies": "zyntra_ofc_cmpny_profile",
+    "Office_locations": "zyntra_ofc_bldg_company"
+  },
+  "county_public_safety": {
+    "county_public_safety": "zentra27_cpsd_cnty_safety",
+    "city": "zentra27_cpsd_city_demographics"
+  },
+  "assets_maintenance": {
+    "Third_Party_Companies": "zentra9_amgmt_tprty_company",
+    "Maintenance_Contracts": "zentra9_amgmt_maint_contract",
+    "Parts": "zentra9_amgmt_part_catalog",
+    "Skills": "zentra9_amgmt_skill",
+    "Staff": "zentra9_amgmt_staff",
+    "Assets": "zentra9_amgmt_asset_lifecycle",
+    "Asset_Parts": "zentra9_amgmt_asset_parts",
+    "Maintenance_Engineers": "zentra9_amgmt_engr_records",
+    "Engineer_Skills": "zentra9_amgmt_engr_skills",
+    "Fault_Log": "zentra9_amgmt_fault_log",
+    "Engineer_Visits": "zentra9_amgmt_engr_visit",
+    "Part_Faults": "zentra9_amgmt_part_fault_catalog",
+    "Fault_Log_Parts": "zentra9_amgmt_fault_log_part_faults",
+    "Skills_Required_To_Fix": "zentra9_amgmt_prtflt_skill"
+  },
+  "college_2": {
+    "classroom": "xelion45_collg_room_facilities",
+    "department": "xelion45_collg_acad_department",
+    "course": "xelion45_collg_acad_course",
+    "instructor": "xelion45_collg_faculty",
+    "section": "xelion45_collg_sec_schedule",
+    "teaches": "xelion45_collg_faculty_teaches",
+    "student": "xelion45_collg_studnt_profile",
+    "takes": "xelion45_collg_enrollments",
+    "advisor": "xelion45_collg_stu_advisor",
+    "time_slot": "xelion45_collg_sched_time_slot",
+    "prereq": "xelion45_collg_acad_prereq"
+  },
+  "culture_company": {
+    "book_club": "xanad_cult_bkcl_awardresults",
+    "movie": "xanad_cult_move_movie",
+    "culture_company": "xanad_cult_co_corporate_info"
+  },
+  "csu_1": {
+    "Campuses": "zentra10_csu_campus_metadata",
+    "csu_fees": "zentra10_csu_fee",
+    "degrees": "zentra10_csu_degrees_awarded",
+    "discipline_enrollments": "zentra10_csu_enr_discipline_enrollments",
+    "enrollments": "zentra10_csu_enrl_summary",
+    "faculty": "zentra10_csu_faculty"
+  },
+  "cre_Doc_Tracking_DB": {
+    "Ref_Document_Types": "zentor1_docmgmt_ref_document_types",
+    "Ref_Calendar": "zentor1_docmgmt_cal_date_ref",
+    "Ref_Locations": "zentor1_docmgmt_ref_locations",
+    "Roles": "zentor1_docmgmt_usr_role",
+    "All_Documents": "zentor1_docmgmt_doc_metadata",
+    "Employees": "zentor1_docmgmt_usr_personnel",
+    "Document_Locations": "zentor1_docmgmt_doc_location",
+    "Documents_to_be_Destroyed": "zentor1_docmgmt_doc_destruction_workflow"
+  },
+  "cre_Doc_Control_Systems": {
+    "Ref_Document_Types": "zentra12_docsys_ref_document_types",
+    "Roles": "zentra12_docsys_usr_roles",
+    "Addresses": "zentra12_docsys_addr",
+    "Ref_Document_Status": "zentra12_docsys_doc_status",
+    "Ref_Shipping_Agents": "zentra12_docsys_ref_shipping_agents",
+    "Documents": "zentra12_docsys_doc_receipt",
+    "Employees": "zentra12_docsys_usr_employees",
+    "Document_Drafts": "zentra12_docsys_doc_drafts",
+    "Draft_Copies": "zentra12_docsys_dft_copies",
+    "Circulation_History": "zentra12_docsys_doc_circulation",
+    "Documents_Mailed": "zentra12_docsys_doc_mailing"
+  },
+  "customers_and_addresses": {
+    "Addresses": "xelion15_custo_usr_address",
+    "Products": "xelion15_custo_prdct_catalog",
+    "Customers": "xelion15_custo_customer",
+    "Customer_Addresses": "xelion15_custo_custaddr",
+    "Customer_Contact_Channels": "xelion15_custo_cntctchnl",
+    "Customer_Orders": "xelion15_custo_order_mgmt",
+    "Order_Items": "xelion15_custo_ordr_item"
+  },
+  "decoration_competition": {
+    "college": "zentra66_decoc_college_info",
+    "member": "zentra66_decoc_usr_participant",
+    "round": "zentra66_decoc_cmp_round_rank"
+  },
+  "debate": {
+    "people": "xelion50_polde_ppl_participant",
+    "debate": "xelion50_polde_dba_debate",
+    "debate_people": "xelion50_polde_dpb_matchup"
+  },
+  "customers_and_products_contacts": {
+    "Addresses": "xelion15_capcon_adr_address",
+    "Products": "xelion15_capcon_prd_product",
+    "Customers": "xelion15_capcon_cust_customer",
+    "Contacts": "xelion15_capcon_cntct_contact",
+    "Customer_Address_History": "xelion15_capcon_cus_address_record",
+    "Customer_Orders": "xelion15_capcon_ord_customer",
+    "Order_Items": "xelion15_capcon_ordr_item"
+  },
+  "customers_campaigns_ecommerce": {
+    "Premises": "zyntra_campcom_addr_premises",
+    "Products": "zyntra_campcom_prd_product",
+    "Customers": "zyntra_campcom_usr_profiles",
+    "Mailshot_Campaigns": "zyntra_campcom_camp_mailshot",
+    "Customer_Addresses": "zyntra_campcom_usr_address",
+    "Customer_Orders": "zyntra_campcom_ord_customer_order",
+    "Mailshot_Customers": "zyntra_campcom_camp_mailshot_customers",
+    "Order_Items": "zyntra_campcom_ord_item"
+  },
+  "department_management": {
+    "department": "xelion32_deptm_dept_structure",
+    "head": "xelion32_deptm_head",
+    "management": "xelion32_deptm_dept_head_assignment"
+  },
+  "device": {
+    "device": "xelion15_devmgmt_dev_catalog",
+    "shop": "xelion15_devmgmt_shp_location",
+    "stock": "xelion15_devmgmt_inv_stock"
+  },
+  "customers_and_invoices": {
+    "Customers": "zyntra_custinv_cust_profile",
+    "Orders": "zyntra_custinv_ord_order",
+    "Invoices": "zyntra_custinv_iv_invoice",
+    "Accounts": "zyntra_custinv_cust_account",
+    "Product_Categories": "zyntra_custinv_pc_categories",
+    "Products": "zyntra_custinv_prd_product_catalog",
+    "Financial_Transactions": "zyntra_custinv_txn_financial",
+    "Order_Items": "zyntra_custinv_ord_items",
+    "Invoice_Line_Items": "zyntra_custinv_iv_line_items"
+  },
+  "customers_card_transactions": {
+    "Accounts": "xelion15_finpay_act_account",
+    "Customers": "xelion15_finpay_usr_profile",
+    "Customers_Cards": "xelion15_finpay_card_details",
+    "Financial_Transactions": "xelion15_finpay_txn_activity"
+  },
+  "cre_Doc_Template_Mgt": {
+    "Ref_Template_Types": "zentor1_doctm_tmp_type",
+    "Templates": "zentor1_doctm_tmp_template",
+    "Documents": "zentor1_doctm_doc_document",
+    "Paragraphs": "zentor1_doctm_cnt_paragraph"
+  },
+  "customer_complaints": {
+    "Staff": "xelion17_comp_staff",
+    "Customers": "xelion17_comp_cus_customer",
+    "Products": "xelion17_comp_prd_product",
+    "Complaints": "xelion17_comp_cmp_lifecycle"
+  },
+  "election_representative": {
+    "election": "zentra27_elrep_election",
+    "representative": "zentra27_elrep_representative"
+  },
+  "cre_Theme_park": {
+    "Ref_Hotel_Star_Ratings": "zyphos2_parksvc_hotl_star_ratings",
+    "Locations": "zyphos2_parksvc_locn_locations",
+    "Ref_Attraction_Types": "zyphos2_parksvc_attr_attraction_types",
+    "Visitors": "zyphos2_parksvc_vst_tourist",
+    "Features": "zyphos2_parksvc_feat_features",
+    "Hotels": "zyphos2_parksvc_hotl_hotels",
+    "Tourist_Attractions": "zyphos2_parksvc_attr_attractions",
+    "Street_Markets": "zyphos2_parksvc_attr_street_markets",
+    "Shops": "zyphos2_parksvc_attr_shops",
+    "Museums": "zyphos2_parksvc_attr_museums",
+    "Royal_Family": "zyphos2_parksvc_attr_royal_family",
+    "Theme_Parks": "zyphos2_parksvc_attr_theme_park",
+    "Visits": "zyphos2_parksvc_vist_visits",
+    "Photos": "zyphos2_parksvc_attr_photos",
+    "Staff": "zyphos2_parksvc_staf_staff",
+    "Tourist_Attraction_Features": "zyphos2_parksvc_attr_feature_map"
+  },
+  "dorm_1": {
+    "Student": "zentra66_dorms_stud_student",
+    "Dorm": "zentra66_dorms_dormitory",
+    "Dorm_amenity": "zentra66_dorms_amen_amenity",
+    "Has_amenity": "zentra66_dorms_dorm_amenity",
+    "Lives_in": "zentra66_dorms_stud_room_assignment"
+  },
+  "entertainment_awards": {
+    "festival_detail": "xelion48_entaw_festival_detail",
+    "artwork": "xelion48_entaw_artw_registry",
+    "nomination": "xelion48_entaw_art_nomination"
+  },
+  "entrepreneur": {
+    "entrepreneur": "xelion17_entrpr_entrepreneur",
+    "people": "xelion17_entrpr_ppl_profile"
+  },
+  "election": {
+    "county": "xelion50_elsys_geo_county",
+    "party": "xelion50_elsys_pol_party",
+    "election": "xelion50_elsys_rep_election"
+  },
+  "driving_school": {
+    "Addresses": "zentor2_drsch_addr_address",
+    "Staff": "zentor2_drsch_staf_instructor",
+    "Vehicles": "zentor2_drsch_vehi_vehicle",
+    "Customers": "zentor2_drsch_cust_customer",
+    "Customer_Payments": "zentor2_drsch_cust_payment",
+    "Lessons": "zentor2_drsch_lessn"
+  },
+  "baseball_1": {
+    "all_star": "xelion11_mlb_player_allstar",
+    "appearances": "xelion11_mlb_player_appearances",
+    "manager_award": "xelion11_mlb_mgr_award",
+    "player_award": "xelion11_mlb_plr_award",
+    "manager_award_vote": "xelion11_mlb_mgr_award_vote",
+    "player_award_vote": "xelion11_mlb_plr_award_vote",
+    "batting": "xelion11_mlb_plr_batting_stats",
+    "batting_postseason": "xelion11_mlb_bat_postseason",
+    "player_college": "xelion11_mlb_usr_college_affiliation",
+    "fielding": "xelion11_mlb_plr_fielding",
+    "fielding_outfield": "xelion11_mlb_fld_outfield",
+    "fielding_postseason": "xelion11_mlb_fld_postseason_fielding",
+    "hall_of_fame": "xelion11_mlb_player_hof_induction",
+    "home_game": "xelion11_mlb_team_home_games",
+    "manager": "xelion11_mlb_mgr_performance",
+    "manager_half": "xelion11_mlb_mgr_half_performance",
+    "player": "xelion11_mlb_player",
+    "park": "xelion11_mlb_stadium_info",
+    "pitching": "xelion11_mlb_plr_pitching",
+    "pitching_postseason": "xelion11_mlb_pit_postseason_stats",
+    "salary": "xelion11_mlb_plr_salary",
+    "college": "xelion11_mlb_college",
+    "postseason": "xelion11_mlb_pst_postseason_outcomes",
+    "team": "xelion11_mlb_team_performance",
+    "team_franchise": "xelion11_mlb_team_franchise",
+    "team_half": "xelion11_mlb_team_half_standings"
+  },
+  "epinions_1": {
+    "item": "xelion19_revsys_itm_item",
+    "review": "xelion19_revsys_rev_rating",
+    "useracct": "xelion19_revsys_usr_account",
+    "trust": "xelion19_revsys_trn_user_trust"
+  },
+  "game_injury": {
+    "stadium": "zentra51_sporthlth_stadium",
+    "game": "zentra51_sporthlth_gm_match",
+    "injury_accident": "zentra51_sporthlth_injry_accident"
+  },
+  "dog_kennels": {
+    "Breeds": "xelion18_dogks_ref_breed",
+    "Charges": "xelion18_dogks_srv_charge",
+    "Sizes": "xelion18_dogks_dog_size",
+    "Treatment_Types": "xelion18_dogks_trt_type",
+    "Owners": "xelion18_dogks_ownr_contact",
+    "Dogs": "xelion18_dogks_dog_profile",
+    "Professionals": "xelion18_dogks_staff_professional",
+    "Treatments": "xelion18_dogks_trtmt_care"
+  },
+  "flight_2": {
+    "airlines": "xelion21_flycore_air_carrier",
+    "airports": "xelion21_flycore_airport_metadata",
+    "flights": "xelion21_flycore_flt_route"
+  },
+  "film_rank": {
+    "film": "xanad_filmr_film_info",
+    "market": "xanad_filmr_mkt_distribution",
+    "film_market_estimation": "xanad_filmr_film_market_estimation"
+  },
+  "e_learning": {
+    "Course_Authors_and_Tutors": "zentra66_learn_usr_instructor",
+    "Students": "zentra66_learn_usr_student_profile",
+    "Subjects": "zentra66_learn_subj",
+    "Courses": "zentra66_learn_crs_metadata",
+    "Student_Course_Enrolment": "zentra66_learn_enrolment",
+    "Student_Tests_Taken": "zentra66_learn_assessment_test_result"
+  },
+  "document_management": {
+    "Roles": "zentra21_docmg_usr_role",
+    "Users": "zentra21_docmg_usr_accounts",
+    "Document_Structures": "zentra21_docmg_doc_structure",
+    "Functional_Areas": "zentra21_docmg_fnc_area",
+    "Images": "zentra21_docmg_img_metadata",
+    "Documents": "zentra21_docmg_doc_metadata",
+    "Document_Functional_Areas": "zentra21_docmg_doc_functional_areas",
+    "Document_Sections": "zentra21_docmg_doc_sections",
+    "Document_Sections_Images": "zentra21_docmg_sec_images"
+  },
+  "farm": {
+    "city": "xantra_agric_loc_city",
+    "farm": "xantra_agric_frm_livestock",
+    "farm_competition": "xantra_agric_cmp_competition",
+    "competition_record": "xantra_agric_cmp_ranking"
+  },
+  "flight_company": {
+    "airport": "zentor2_fltmgmt_apmgr_airport",
+    "operate_company": "zentor2_fltmgmt_cop_company",
+    "flight": "zentor2_fltmgmt_fltlog_flight"
+  },
+  "employee_hire_evaluation": {
+    "employee": "xelion17_empmt_employee",
+    "shop": "xelion17_empmt_shop",
+    "hiring": "xelion17_empmt_hiring_assignment",
+    "evaluation": "xelion17_empmt_perf_evaluation"
+  },
+  "flight_1": {
+    "flight": "xelion21_flyte_flt_operation",
+    "aircraft": "xelion21_flyte_acm_aircraft",
+    "employee": "xelion21_flyte_emp_profile",
+    "certificate": "xelion21_flyte_em_certificate"
+  },
+  "cre_Drama_Workshop_Groups": {
+    "Ref_Payment_Methods": "xanad_dramawork_txn_payment_method",
+    "Ref_Service_Types": "xanad_dramawork_svc_types",
+    "Addresses": "xanad_dramawork_loc_address",
+    "Products": "xanad_dramawork_prd_products",
+    "Marketing_Regions": "xanad_dramawork_str_marketing_regions",
+    "Clients": "xanad_dramawork_cust_client",
+    "Drama_Workshop_Groups": "xanad_dramawork_wkgrp_storeinfo",
+    "Performers": "xanad_dramawork_prfrm_performer",
+    "Customers": "xanad_dramawork_usr_customers",
+    "Stores": "xanad_dramawork_str_store_ops",
+    "Bookings": "xanad_dramawork_bkg_workshop_booking",
+    "Performers_in_Bookings": "xanad_dramawork_bkg_performer_assignment",
+    "Customer_Orders": "xanad_dramawork_ord_customer_orders",
+    "Order_Items": "xanad_dramawork_ordr_items",
+    "Invoices": "xanad_dramawork_txn_invoice",
+    "Services": "xanad_dramawork_svc_offered_services",
+    "Bookings_Services": "xanad_dramawork_bkg_services",
+    "Invoice_Items": "xanad_dramawork_txn_invoice_items"
+  },
+  "flight_4": {
+    "routes": "zentor2_flycore_rte_route",
+    "airports": "zentor2_flycore_ap_info",
+    "airlines": "zentor2_flycore_airline_metadata"
+  },
+  "geo": {
+    "state": "xantra_geodm_adm_state",
+    "city": "xantra_geodm_city",
+    "border_info": "xantra_geodm_state_borders",
+    "highlow": "xantra_geodm_state_elevation",
+    "lake": "xantra_geodm_lake",
+    "mountain": "xantra_geodm_mountain",
+    "river": "xantra_geodm_river"
+  },
+  "gymnast": {
+    "gymnast": "zentra51_gymd_gymnast_performance",
+    "people": "zentra51_gymd_usr_athlete_info"
+  },
+  "department_store": {
+    "Addresses": "zyntra_deptstore_addr_address",
+    "Staff": "zyntra_deptstore_hr_staff",
+    "Suppliers": "zyntra_deptstore_supp_supplier",
+    "Department_Store_Chain": "zyntra_deptstore_store_chain",
+    "Customers": "zyntra_deptstore_cust_customer",
+    "Products": "zyntra_deptstore_prod_catalog",
+    "Supplier_Addresses": "zyntra_deptstore_supp_address_link",
+    "Customer_Addresses": "zyntra_deptstore_cust_address_link",
+    "Customer_Orders": "zyntra_deptstore_sale_order",
+    "Department_Stores": "zyntra_deptstore_store_location",
+    "Departments": "zyntra_deptstore_store_dept",
+    "Order_Items": "zyntra_deptstore_sale_order_items",
+    "Product_Suppliers": "zyntra_deptstore_prod_supp_product_suppliers",
+    "Staff_Department_Assignments": "zyntra_deptstore_hr_staff_dept_assignments"
+  },
+  "gas_company": {
+    "company": "zyntra_gascorp_co_company",
+    "gas_station": "zyntra_gascorp_gas_station",
+    "station_company": "zyntra_gascorp_stn_company_rank"
+  },
+  "e_government": {
+    "Addresses": "zentra27_egov_adr_address",
+    "Services": "zentra27_egov_svc_service_definition",
+    "Forms": "zentra27_egov_frm_management",
+    "Individuals": "zentra27_egov_prty_individual",
+    "Organizations": "zentra27_egov_org_organization",
+    "Parties": "zentra27_egov_prty_contact",
+    "Organization_Contact_Individuals": "zentra27_egov_par_contact",
+    "Party_Addresses": "zentra27_egov_par_address",
+    "Party_Forms": "zentra27_egov_frm_party_form_status",
+    "Party_Services": "zentra27_egov_svc_bookings"
+  },
+  "game_1": {
+    "Student": "xelion55_studly_stdnt_academic",
+    "Video_Games": "xelion55_studly_vdg_game_catalog",
+    "Plays_Games": "xelion55_studly_usr_game_engagement",
+    "SportsInfo": "xelion55_studly_sports_participation"
+  },
+  "customer_deliveries": {
+    "Products": "xelion15_custdel_prdct_catalog",
+    "Addresses": "xelion15_custdel_adr_address",
+    "Customers": "xelion15_custdel_cust_customer",
+    "Regular_Orders": "xelion15_custdel_ord_regular",
+    "Regular_Order_Products": "xelion15_custdel_ord_regular_product_link",
+    "Actual_Orders": "xelion15_custdel_ord_actual_order",
+    "Actual_Order_Products": "xelion15_custdel_ordr_product_link",
+    "Customer_Addresses": "xelion15_custdel_cust_address",
+    "Delivery_Routes": "xelion15_custdel_dlvry_route",
+    "Delivery_Route_Locations": "xelion15_custdel_del_route_locations",
+    "Trucks": "xelion15_custdel_trk_trucks",
+    "Employees": "xelion15_custdel_drvr_employees",
+    "Order_Deliveries": "xelion15_custdel_ord_delivery"
+  },
+  "inn_1": {
+    "Rooms": "xelra_hmsrv_room_config",
+    "Reservations": "xelra_hmsrv_resv_reservation"
+  },
+  "icfp_1": {
+    "Inst": "zentra54_acad_inst_info",
+    "Authors": "zentra54_acad_rsrchr_authors",
+    "Papers": "zentra54_acad_pub_papers",
+    "Authorship": "zentra54_acad_auth_inst_paper"
+  },
+  "local_govt_in_alabama": {
+    "Services": "xelion50_lgsa_svc_service_type",
+    "Participants": "xelion50_lgsa_ptcp_participant_details",
+    "Events": "xelion50_lgsa_evnt_event",
+    "Participants_in_Events": "xelion50_lgsa_evpt_participation"
+  },
+  "hr_1": {
+    "regions": "xelion17_hrms_geo_region",
+    "countries": "xelion17_hrms_geo_country",
+    "departments": "xelion17_hrms_org_department",
+    "jobs": "xelion17_hrms_job_role",
+    "employees": "xelion17_hrms_emp_employee",
+    "job_history": "xelion17_hrms_record_job_assignment",
+    "locations": "xelion17_hrms_geo_location"
+  },
+  "journal_committee": {
+    "journal": "zentra54_jcom_jm_journal",
+    "editor": "zentra54_jcom_em_editor",
+    "journal_committee": "zentra54_jcom_ca_committee_assignment"
+  },
+  "insurance_fnol": {
+    "Customers": "xelion25_insur_cust_profile",
+    "Services": "xelion25_insur_svc_types",
+    "Available_Policies": "xelion25_insur_pol_available",
+    "Customers_Policies": "xelion25_insur_pol_customer_policy_link",
+    "First_Notification_of_Loss": "xelion25_insur_fnol_processing",
+    "Claims": "xelion25_insur_clm_claim",
+    "Settlements": "xelion25_insur_clm_settlement"
+  },
+  "museum_visit": {
+    "museum": "xanad_musv_museum",
+    "visitor": "xanad_musv_vst_profile",
+    "visit": "xanad_musv_vst_txn"
+  },
+  "manufactory_1": {
+    "Manufacturers": "zyntra_mfg_mfr_profile",
+    "Products": "zyntra_mfg_prd_product_catalog"
+  },
+  "insurance_and_eClaims": {
+    "Customers": "zentor3_insur_cust_customer",
+    "Staff": "zentor3_insur_stf_staff",
+    "Policies": "zentor3_insur_pol_policy",
+    "Claim_Headers": "zentor3_insur_clm_header",
+    "Claims_Documents": "zentor3_insur_clm_documentation",
+    "Claims_Processing_Stages": "zentor3_insur_clm_processing_stages",
+    "Claims_Processing": "zentor3_insur_clm_processing"
+  },
+  "loan_1": {
+    "bank": "zentor3_lmsys_brn_branch",
+    "customer": "zentor3_lmsys_cust_profile",
+    "loan": "zentor3_lmsys_loan"
+  },
+  "manufacturer": {
+    "manufacturer": "zyntra_mftr_mfg_manufacturer",
+    "furniture": "zyntra_mftr_furn_catalog",
+    "furniture_manufacte": "zyntra_mftr_prod_pricing"
+  },
+  "machine_repair": {
+    "repair": "zentra9_mrep_repair",
+    "machine": "zentra9_mrep_machine",
+    "technician": "zentra9_mrep_tech_profile",
+    "repair_assignment": "zentra9_mrep_assign_repair_machine_technician"
+  },
+  "match_season": {
+    "country": "zentra51_mcsn_geo_country",
+    "team": "zentra51_mcsn_team",
+    "match_season": "zentra51_mcsn_plr_season_participation",
+    "player": "zentra51_mcsn_plr_performance"
+  },
+  "mountain_photos": {
+    "mountain": "xantra1_mntnx_mntn",
+    "camera_lens": "xantra1_mntnx_eqpt_lens_catalog",
+    "photos": "xantra1_mntnx_photo_catalog"
+  },
+  "movie_1": {
+    "Movie": "xelion48_movr_mv_catalog",
+    "Reviewer": "xelion48_movr_revwr",
+    "Rating": "xelion48_movr_rvw_rating"
+  },
+  "insurance_policies": {
+    "Customers": "xelion25_insur_cust_details",
+    "Customer_Policies": "xelion25_insur_pol_customer",
+    "Claims": "xelion25_insur_clm_claim_processing",
+    "Settlements": "xelion25_insur_clm_settlements",
+    "Payments": "xelion25_insur_txn_payment"
+  },
+  "medicine_enzyme_interaction": {
+    "medicine": "zyphos5_medint_medicine",
+    "enzyme": "zyphos5_medint_enz_enzyme_info",
+    "medicine_enzyme_interaction": "zyphos5_medint_medicine_enzyme_intxn"
+  },
+  "network_1": {
+    "Highschooler": "zentra36_studnt_usr_profile",
+    "Friend": "zentra36_studnt_frndship",
+    "Likes": "zentra36_studnt_usr_likes"
+  },
+  "music_4": {
+    "artist": "zentra11_musix_art_profile",
+    "volume": "zentra11_musix_vlm_chart_performance",
+    "music_festival": "zentra11_musix_vol_festival_recognition"
+  },
+  "network_2": {
+    "Person": "xelion54_socnet_usr_profile",
+    "PersonFriend": "xelion54_socnet_rel_friendships"
+  },
+  "orchestra": {
+    "conductor": "xelora_musent_conductor",
+    "orchestra": "xelora_musent_orch_orchestra",
+    "performance": "xelora_musent_perf_performance",
+    "show": "xelora_musent_shw_analytics"
+  },
+  "musical": {
+    "musical": "xelora_msl_musical",
+    "actor": "xelora_msl_act_role"
+  },
+  "formula_1": {
+    "circuits": "zentra51_f1dom_trk_circuits",
+    "races": "zentra51_f1dom_racing_events",
+    "drivers": "zentra51_f1dom_drv_info",
+    "status": "zentra51_f1dom_race_status",
+    "seasons": "zentra51_f1dom_seasons",
+    "constructors": "zentra51_f1dom_constr_team",
+    "constructorStandings": "zentra51_f1dom_constructor_standings",
+    "results": "zentra51_f1dom_rslt_race_results",
+    "driverStandings": "zentra51_f1dom_drv_standings",
+    "constructorResults": "zentra51_f1dom_ctor_results",
+    "qualifying": "zentra51_f1dom_qualifying",
+    "pitStops": "zentra51_f1dom_pitstops",
+    "lapTimes": "zentra51_f1dom_lap_times"
+  },
+  "imdb": {
+    "actor": "xelora_mediacore_prs_actor",
+    "copyright": "xelora_mediacore_mda_copyright",
+    "cast": "xelora_mediacore_rel_cast",
+    "genre": "xelora_mediacore_cls_genre",
+    "classification": "xelora_mediacore_mcm_classification",
+    "company": "xelora_mediacore_prd_company",
+    "director": "xelora_mediacore_dir_info",
+    "producer": "xelora_mediacore_prdcr_profile",
+    "directed_by": "xelora_mediacore_dir_directed_by",
+    "keyword": "xelora_mediacore_cls_keyword",
+    "made_by": "xelora_mediacore_prd_made_by",
+    "movie": "xelora_mediacore_mov_metadata",
+    "tags": "xelora_mediacore_kwd_tags",
+    "tv_series": "xelora_mediacore_tvs_series",
+    "writer": "xelora_mediacore_wri_writer",
+    "written_by": "xelora_mediacore_wtr_media_link"
+  },
+  "party_host": {
+    "party": "zentra40_prty_party",
+    "host": "zentra40_prty_hst",
+    "party_host": "zentra40_prty_xr_party_host"
+  },
+  "perpetrator": {
+    "perpetrator": "zentra41_crmperp_incident",
+    "people": "zentra41_crmperp_perp_person"
+  },
+  "music_1": {
+    "genre": "xelion48_musix_gen_genre",
+    "artist": "xelion48_musix_art_artist",
+    "files": "xelion48_musix_aud_filemeta",
+    "song": "xelion48_musix_sng_metadata"
+  },
+  "local_govt_mdm": {
+    "Customer_Master_Index": "xelion50_lgov_cmi_customers",
+    "CMI_Cross_References": "xelion50_lgov_cmi_cross_ref",
+    "Council_Tax": "xelion50_lgov_tax_council",
+    "Business_Rates": "xelion50_lgov_rate_business",
+    "Benefits_Overpayments": "xelion50_lgov_benf_overpayments",
+    "Parking_Fines": "xelion50_lgov_park_fines",
+    "Rent_Arrears": "xelion50_lgov_rent_arrears",
+    "Electoral_Register": "xelion50_lgov_elec_register"
+  },
+  "music_2": {
+    "Songs": "xanad_musiq_sng_metadata",
+    "Albums": "xanad_musiq_album",
+    "Band": "xanad_musiq_bnd_member",
+    "Instruments": "xanad_musiq_bnd_instrument",
+    "Performance": "xanad_musiq_perf_live_performance",
+    "Tracklists": "xanad_musiq_alb_tracklist",
+    "Vocals": "xanad_musiq_vocal_roles"
+  },
+  "news_report": {
+    "event": "zentra11_newsy_evt_event",
+    "journalist": "zentra11_newsy_jrn_journalist",
+    "news_report": "zentra11_newsy_jrnlst_event_work_type"
+  },
+  "pets_1": {
+    "Student": "xelion33_studmgmt_usr_student_profile",
+    "Has_Pet": "xelion33_petmgmt_ownlink",
+    "Pets": "xelion33_petmgmt_pet_profile"
+  },
+  "pilot_record": {
+    "aircraft": "xelion21_flyte_airc_inventory",
+    "pilot": "xelion21_flyte_pilot",
+    "pilot_record": "xelion21_flyte_pilot_aircraft_usage"
+  },
+  "performance_attendance": {
+    "member": "xelora_perfatt_mem_profile",
+    "performance": "xelora_perfatt_perf_event",
+    "member_attendance": "xelora_perfatt_mem_attendance"
+  },
+  "party_people": {
+    "region": "xelion50_polsys_geo_region",
+    "party": "xelion50_polsys_party_governance",
+    "member": "xelion50_polsys_mbr_profile",
+    "party_events": "xelion50_polsys_evt_party"
+  },
+  "phone_market": {
+    "phone": "xelion15_phonx_phn_catalog",
+    "market": "xelion15_phonx_mkt_region_ops",
+    "phone_market": "xelion15_phonx_inv_phone_market"
+  },
+  "phone_1": {
+    "chip_model": "xelion17_mobdev_chipset",
+    "screen_mode": "xelion17_mobdev_scrn_mode",
+    "phone": "xelion17_mobdev_dev_hw_accreditation"
+  },
+  "hospital_1": {
+    "Physician": "xelion31_hospex_cln_physician",
+    "Department": "xelion31_hospex_dpt_department",
+    "Affiliated_With": "xelion31_hospex_phys_dept_affil",
+    "Procedures": "xelion31_hospex_med_procedures",
+    "Trained_In": "xelion31_hospex_phys_trained_procs",
+    "Patient": "xelion31_hospex_ptnt_info",
+    "Nurse": "xelion31_hospex_nurse",
+    "Appointment": "xelion31_hospex_appointment",
+    "Medication": "xelion31_hospex_med_medication",
+    "Prescribes": "xelion31_hospex_txn_prescription",
+    "Block": "xelion31_hospex_fac_block",
+    "Room": "xelion31_hospex_fac_room",
+    "On_Call": "xelion31_hospex_nurse_oncall",
+    "Stay": "xelion31_hospex_pt_stay",
+    "Undergoes": "xelion31_hospex_proc_undergoes"
+  },
+  "roller_coaster": {
+    "roller_coaster": "xeltra_coast_rc_info",
+    "country": "xeltra_coast_cnty_geography"
+  },
+  "race_track": {
+    "race": "zentra51_racetrk_evt_race",
+    "track": "zentra51_racetrk_trk_facility"
+  },
+  "restaurants": {
+    "GEOGRAPHIC": "qynta_eatly_geo_location",
+    "RESTAURANT": "qynta_eatly_rest_restaurant",
+    "LOCATION": "qynta_eatly_rest_location"
+  },
+  "program_share": {
+    "program": "xelion48_medias_prgm_metadata",
+    "channel": "xelion48_medias_chnl_profile",
+    "broadcast": "xelion48_medias_brdcast_schedule",
+    "broadcast_share": "xelion48_medias_brd_share"
+  },
+  "railway": {
+    "railway": "xelion21_rail_rly_infra",
+    "train": "xelion21_rail_trn_ops",
+    "manager": "xelion21_rail_mgr_info",
+    "railway_manage": "xelion21_rail_mngmt_assign"
+  },
+  "protein_institute": {
+    "building": "zentra49_proti_facility_building",
+    "Institution": "zentra49_proti_inst_institution",
+    "protein": "zentra49_proti_prot_data"
+  },
+  "local_govt_and_lot": {
+    "Customers": "xelion32_locgov_usr_customers",
+    "Properties": "xelion32_locgov_prp_property",
+    "Residents": "xelion32_locgov_resident_property",
+    "Organizations": "xelion32_locgov_org_organization",
+    "Services": "xelion32_locgov_svc_services",
+    "Residents_Services": "xelion32_locgov_rsdnt_svc",
+    "Things": "xelion32_locgov_ast_thing",
+    "Customer_Events": "xelion32_locgov_evt_customer_event",
+    "Customer_Event_Notes": "xelion32_locgov_cevent_notes",
+    "Timed_Status_of_Things": "xelion32_locgov_thing_status",
+    "Timed_Locations_of_Things": "xelion32_locgov_thing_location"
+  },
+  "restaurant_1": {
+    "Student": "xelion34_resys_stu_student",
+    "Restaurant": "xelion34_resys_res_restaurant",
+    "Type_Of_Restaurant": "xelion34_resys_rty_restaurant_type",
+    "Restaurant_Type": "xelion34_resys_rty_category",
+    "Visits_Restaurant": "xelion34_resys_vis_restaurant_visit"
+  },
+  "poker_player": {
+    "poker_player": "zentra51_pkrply_plyr_performance",
+    "people": "zentra51_pkrply_plyr_identity"
+  },
+  "riding_club": {
+    "player": "zentra51_ryclub_rider_profile",
+    "club": "zentra51_ryclub_club_info",
+    "coach": "zentra51_ryclub_cch_coach",
+    "player_coach": "zentra51_ryclub_plr_coach_rel",
+    "match_result": "zentra51_ryclub_club_match_results"
+  },
+  "products_for_hire": {
+    "Discount_Coupons": "zyntra_prdhr_dscnt_coupon",
+    "Customers": "zyntra_prdhr_cust_profile",
+    "Bookings": "zyntra_prdhr_bkg_bookings",
+    "Products_for_Hire": "zyntra_prdhr_product_catalog",
+    "Payments": "zyntra_prdhr_txn_payments",
+    "Products_Booked": "zyntra_prdhr_bkg_product_usage",
+    "View_Product_Availability": "zyntra_prdhr_prd_availability"
+  },
+  "school_finance": {
+    "School": "zentra10_schfin_sch_core",
+    "budget": "zentra10_schfin_sch_budget",
+    "endowment": "zentra10_schfin_endo_endowment"
+  },
+  "products_gen_characteristics": {
+    "Ref_Characteristic_Types": "xelion15_prodmgmt_ref_charactertype",
+    "Ref_Colors": "xelion15_prodmgmt_ref_color",
+    "Ref_Product_Categories": "xelion15_prodmgmt_ref_product_categories",
+    "Characteristics": "xelion15_prodmgmt_prd_characteristic",
+    "Products": "xelion15_prodmgmt_prd_product",
+    "Product_Characteristics": "xelion15_prodmgmt_prd_characteristics"
+  },
+  "school_bus": {
+    "driver": "zentra66_schol_drvr_profile",
+    "school": "zentra66_schol_schl_info",
+    "school_bus": "zentra66_schol_drvr_schl_xref"
+  },
+  "scientist_1": {
+    "Scientists": "zentra54_resmgmt_usr_scientists",
+    "Projects": "zentra54_resmgmt_prjct_summary",
+    "AssignedTo": "zentra54_resmgmt_usr_assignment"
+  },
+  "ship_1": {
+    "captain": "xelion21_marop_cptn_profile",
+    "Ship": "xelion21_marop_vsl_ship"
+  },
+  "real_estate_properties": {
+    "Ref_Feature_Types": "zentra53_reale_feat_type",
+    "Ref_Property_Types": "zentra53_reale_prop_type",
+    "Other_Available_Features": "zentra53_reale_feat_available_features",
+    "Properties": "zentra53_reale_prop_property_listing",
+    "Other_Property_Features": "zentra53_reale_prp_features"
+  },
+  "school_player": {
+    "school": "xelion45_schol_schl_info",
+    "school_details": "xelion45_schol_sport_details",
+    "school_performance": "xelion45_schol_result_performance",
+    "player": "xelion45_schol_plr_profile"
+  },
+  "ship_mission": {
+    "mission": "zentos_marop_miss_mission",
+    "ship": "zentos_marop_ship_info"
+  },
+  "scholar": {
+    "venue": "zentra54_acad_venue",
+    "author": "zentra54_acad_authr",
+    "dataset": "zentra54_acad_dset_metadata",
+    "journal": "zentra54_acad_pub_journal",
+    "keyphrase": "zentra54_acad_kp_topic",
+    "paper": "zentra54_acad_pub_paper",
+    "cite": "zentra54_acad_cite",
+    "paperDataset": "zentra54_acad_pap_dataset",
+    "paperKeyphrase": "zentra54_acad_paper_keyphrase",
+    "writes": "zentra54_acad_pap_author"
+  },
+  "small_bank_1": {
+    "ACCOUNTS": "zentor3_bnk_cust_account",
+    "SAVINGS": "zentor3_bnk_save_balance",
+    "CHECKING": "zentor3_bnk_chkg_account_balance"
+  },
+  "shop_membership": {
+    "member": "xelion15_shpmbr_mbr_member",
+    "branch": "xelion15_shpmbr_brch_details",
+    "membership_register_branch": "xelion15_shpmbr_reg_branch",
+    "purchase": "xelion15_shpmbr_pur"
+  },
+  "product_catalog": {
+    "Attribute_Definitions": "xelion17_prcat_attr_definition",
+    "Catalogs": "xelion17_prcat_catlg_metadata",
+    "Catalog_Structure": "xelion17_prcat_cat_structure",
+    "Catalog_Contents": "xelion17_prcat_prdct_catalog_entry",
+    "Catalog_Contents_Additional_Attributes": "xelion17_prcat_attr_values"
+  },
+  "station_weather": {
+    "train": "zentos_railwx_rail_train",
+    "station": "zentos_railwx_rail_station",
+    "route": "zentos_railwx_rail_route",
+    "weekly_weather": "zentos_railwx_wx_station_weather"
+  },
+  "soccer_2": {
+    "College": "xelion11_socdb_coll_college",
+    "Player": "xelion11_socdb_plyr_player",
+    "Tryout": "xelion11_socdb_trio_tryout"
+  },
+  "storm_record": {
+    "storm": "xantra1_storm_storm_event",
+    "region": "xantra1_storm_region",
+    "affected_region": "xantra1_storm_impact_region"
+  },
+  "sports_competition": {
+    "club": "xelion55_sprts_club",
+    "club_rank": "xelion55_sprts_club_ranking",
+    "player": "xelion55_sprts_plr_performance",
+    "competition": "xelion55_sprts_cmpetition",
+    "competition_result": "xelion55_sprts_cmp_result"
+  },
+  "student_1": {
+    "list": "xelion45_schol_stud_student",
+    "teachers": "xelion45_schol_teachers"
+  },
+  "singer": {
+    "singer": "xelion42_music_art_singer",
+    "song": "xelion42_music_sng_catalog"
+  },
+  "store_product": {
+    "product": "xelion15_prdstor_prdct_specs",
+    "store": "xelion15_prdstor_str_info",
+    "district": "xelion15_prdstor_dist_geo",
+    "store_product": "xelion15_prdstor_str_product",
+    "store_district": "xelion15_prdstor_str_district"
+  },
+  "theme_gallery": {
+    "artist": "xanad_galr_art_artist",
+    "exhibition": "xanad_galr_exhhibition_planning",
+    "exhibition_record": "xanad_galr_exh_attendance"
+  },
+  "soccer_1": {
+    "Player_Attributes": "zentra51_socer_plr_attributes",
+    "Player": "zentra51_socer_usr_player",
+    "League": "zentra51_socer_lg_league",
+    "Country": "zentra51_socer_cnt_country",
+    "Team": "zentra51_socer_tea_identity",
+    "Team_Attributes": "zentra51_socer_team_tactics"
+  },
+  "swimming": {
+    "swimmer": "zentra51_swimd_swimmer",
+    "stadium": "zentra51_swimd_stad_info",
+    "event": "zentra51_swimd_evnt_event",
+    "record": "zentra51_swimd_res_performance"
+  },
+  "store_1": {
+    "artists": "zyntra_music_artists",
+    "albums": "zyntra_music_cnt_albums",
+    "employees": "zyntra_music_emp_staff",
+    "customers": "zyntra_music_crm_customer",
+    "genres": "zyntra_music_cnt_genre",
+    "invoices": "zyntra_music_txn_invoice",
+    "media_types": "zyntra_music_cnt_media_types",
+    "tracks": "zyntra_music_trk_metadata",
+    "invoice_lines": "zyntra_music_txn_invoice_lines",
+    "playlists": "zyntra_music_usr_playlists",
+    "playlist_tracks": "zyntra_music_plst_tracks"
+  },
+  "tracking_orders": {
+    "Customers": "zentra62_ordmgmt_cust_info",
+    "Invoices": "zentra62_ordmgmt_inv_invoice",
+    "Orders": "zentra62_ordmgmt_ord_order",
+    "Products": "zentra62_ordmgmt_prdct_catalog",
+    "Order_Items": "zentra62_ordmgmt_ord_item",
+    "Shipments": "zentra62_ordmgmt_shipment_tracking",
+    "Shipment_Items": "zentra62_ordmgmt_shipment_items"
+  },
+  "sakila_1": {
+    "actor": "xelion42_dvdrent_actor",
+    "address": "xelion42_dvdrent_loc_address",
+    "category": "xelion42_dvdrent_category",
+    "city": "xelion42_dvdrent_loc_city",
+    "country": "xelion42_dvdrent_geo_country",
+    "customer": "xelion42_dvdrent_usr_customer",
+    "film": "xelion42_dvdrent_film",
+    "film_actor": "xelion42_dvdrent_film_actor",
+    "film_category": "xelion42_dvdrent_film_category",
+    "film_text": "xelion42_dvdrent_film_text",
+    "inventory": "xelion42_dvdrent_inv_physical_copy",
+    "language": "xelion42_dvdrent_film_language",
+    "payment": "xelion42_dvdrent_txn_payment",
+    "rental": "xelion42_dvdrent_txn_rental",
+    "staff": "xelion42_dvdrent_staff",
+    "store": "xelion42_dvdrent_str_location"
+  },
+  "twitter_1": {
+    "follows": "xelion54_social_usr_follows",
+    "tweets": "xelion54_social_cnt_tweets",
+    "user_profiles": "xelion54_social_usr_profile"
+  },
+  "tvshow": {
+    "TV_Channel": "xelion48_showbiz_chman_channel",
+    "TV_series": "xelion48_showbiz_tvsrt_series_tvsrt_series",
+    "Cartoon": "xelion48_showbiz_cartn_cartoon"
+  },
+  "university_basketball": {
+    "basketball_match": "zentra51_unibask_bask_match_performance",
+    "university": "zentra51_unibask_univ_university"
+  },
+  "solvency_ii": {
+    "Addresses": "zentor4_evdom_geo_address",
+    "Locations": "zentor4_evdom_geo_location",
+    "Products": "zentor4_evdom_product",
+    "Parties": "zentor4_evdom_party_details",
+    "Assets": "zentor4_evdom_asset",
+    "Channels": "zentor4_evdom_chan_channel",
+    "Finances": "zentor4_evdom_finance",
+    "Events": "zentor4_evdom_event",
+    "Products_in_Events": "zentor4_evdom_prd_event_link",
+    "Parties_in_Events": "zentor4_evdom_event_party_role",
+    "Agreements": "zentor4_evdom_agreement",
+    "Assets_in_Events": "zentor4_evdom_asset_event_link"
+  },
+  "student_assessment": {
+    "Addresses": "zentra10_studasmt_addr_address",
+    "People": "zentra10_studasmt_per_people",
+    "Students": "zentra10_studasmt_stud_students",
+    "Courses": "zentra10_studasmt_crse_metadata",
+    "People_Addresses": "zentra10_studasmt_per_addr",
+    "Student_Course_Registrations": "zentra10_studasmt_regat_registration",
+    "Student_Course_Attendance": "zentra10_studasmt_stud_attendance",
+    "Candidates": "zentra10_studasmt_canda_candidates",
+    "Candidate_Assessments": "zentra10_studasmt_canda_assessment_outcome"
+  },
+  "voter_1": {
+    "AREA_CODE_STATE": "xelion50_votr_geo_area_code_state",
+    "CONTESTANTS": "xelion50_votr_cntstnt",
+    "VOTES": "xelion50_votr_vote"
+  },
+  "workshop_paper": {
+    "workshop": "zentra54_wrkshp_workshop",
+    "submission": "zentra54_wrkshp_pap_submission",
+    "Acceptance": "zentra54_wrkshp_sub_acceptance"
+  },
+  "tracking_software_problems": {
+    "Problem_Category_Codes": "zentra64_trksw_prb_category",
+    "Problem_Log": "zentra64_trksw_prblm_log",
+    "Problem_Status_Codes": "zentra64_trksw_prob_status",
+    "Product": "zentra64_trksw_sw_product",
+    "Staff": "zentra64_trksw_usr_staff",
+    "Problems": "zentra64_trksw_sw_problem"
+  },
+  "student_transcripts_tracking": {
+    "Addresses": "xelion45_sttr_addr_address",
+    "Courses": "xelion45_sttr_acd_course_catalog",
+    "Departments": "xelion45_sttr_aca_departments",
+    "Degree_Programs": "xelion45_sttr_deg_programs",
+    "Sections": "xelion45_sttr_crse_sections",
+    "Semesters": "xelion45_sttr_acd_semesters",
+    "Students": "xelion45_sttr_stdnt_info",
+    "Student_Enrolment": "xelion45_sttr_stdnt_enrol",
+    "Student_Enrolment_Courses": "xelion45_sttr_enr_course_link",
+    "Transcripts": "xelion45_sttr_trnscrpt",
+    "Transcript_Contents": "xelion45_sttr_trnscrpt_content"
+  },
+  "tracking_share_transactions": {
+    "Investors": "xelion25_invst_investor_details",
+    "Lots": "xelion25_invst_shr_lots",
+    "Ref_Transaction_Types": "xelion25_invst_txn_types",
+    "Transactions": "xelion25_invst_txn_shares",
+    "Sales": "xelion25_invst_txn_sales",
+    "Purchases": "xelion25_invst_txn_purchase",
+    "Transactions_Lots": "xelion25_invst_txn_lots"
+  },
+  "wedding": {
+    "people": "zentra65_matrim_prsn_registry",
+    "church": "zentra65_matrim_church",
+    "wedding": "zentra65_matrim_wedding_event"
+  },
+  "voter_2": {
+    "Student": "xelion32_votr_usr_student",
+    "Voting_record": "xelion32_votr_vote_activity"
+  },
+  "tracking_grants_for_research": {
+    "Document_Types": "xelion47_grant_doc_type",
+    "Documents": "xelion47_grant_doc_document_tracking",
+    "Grants": "xelion47_grant_fund_record",
+    "Organisation_Types": "xelion47_grant_org_type",
+    "Organisations": "xelion47_grant_org_organization",
+    "Project_Outcomes": "xelion47_grant_prj_outcomes",
+    "Project_Staff": "xelion47_grant_prj_staff",
+    "Projects": "xelion47_grant_prj_project",
+    "Research_Outcomes": "xelion47_grant_outcome_std",
+    "Research_Staff": "xelion47_grant_research_staff",
+    "Staff_Roles": "xelion47_grant_staff_role",
+    "Tasks": "xelion47_grant_prj_task"
+  },
+  "wrestler": {
+    "wrestler": "xelion11_wrstlr_wrestler_championship",
+    "Elimination": "xelion11_wrstlr_match_elimination"
+  },
+  "wine_1": {
+    "grapes": "xelion52_wnmgt_grape_variety",
+    "appellations": "xelion52_wnmgt_appellation_geo",
+    "wine": "xelion52_wnmgt_wine_inventory"
+  },
+  "wta_1": {
+    "players": "xelion55_wtad_plr_profile",
+    "matches": "xelion55_wtad_mch_match_outcomes",
+    "rankings": "xelion55_wtad_plr_rankings"
+  },
+  "world_1": {
+    "city": "xantra1_world_city_info",
+    "country": "xantra1_world_ctr_country",
+    "countrylanguage": "xantra1_world_lang_country_language"
+  },
+  "yelp": {
+    "business": "xelion54_yelpx_biz_profile",
+    "category": "xelion54_yelpx_bus_category",
+    "user": "xelion54_yelpx_usr_profile",
+    "checkin": "xelion54_yelpx_usr_checkin",
+    "neighbourhood": "xelion54_yelpx_biz_neighbourhood",
+    "review": "xelion54_yelpx_usr_review",
+    "tip": "xelion54_yelpx_usr_tip"
+  },
+  "train_station": {
+    "station": "xelion21_trnst_stn_metadata",
+    "train": "xelion21_trnst_trn_train",
+    "train_station": "xelion21_trnst_trn_station"
+  },
+  "car_1": {
+    "continents": "zentos_autov_geo_continent",
+    "countries": "zentos_autov_cnt_country",
+    "car_makers": "zentos_autov_mfr_makers",
+    "model_list": "zentos_autov_car_model_catalog",
+    "car_names": "zentos_autov_mak_model",
+    "cars_data": "zentos_autov_car_performance"
+  },
+  "behavior_monitoring": {
+    "Ref_Address_Types": "zentra66_behav_addr_type",
+    "Ref_Detention_Type": "zentra66_behav_detention_type",
+    "Ref_Incident_Type": "zentra66_behav_incident_type",
+    "Addresses": "zentra66_behav_addr_address",
+    "Students": "zentra66_behav_usr_student_profile",
+    "Teachers": "zentra66_behav_tchr_teacher_profile",
+    "Assessment_Notes": "zentra66_behav_assessment_notes",
+    "Behavior_Incident": "zentra66_behav_incident",
+    "Detention": "zentra66_behav_detention",
+    "Student_Addresses": "zentra66_behav_stud_address",
+    "Students_in_Detention": "zentra66_behav_stud_detention_link"
+  },
+  "address_1": {
+    "City": "xantri_eduqm_loc_city",
+    "Direct_distance": "xantri_eduqm_dir_distance",
+    "Student": "xantri_eduqm_stdnt"
+  },
+  "bike_racing": {
+    "bike": "zynnex_racebike_bike_inventory",
+    "cyclists_own_bikes": "zynnex_racebike_cyclist_own_bike",
+    "cyclist": "zynnex_racebike_usr_cyclist"
+  },
+  "art_1": {
+    "Artists": "zynox_artwk_artist",
+    "Sculptures": "zynox_artwk_sculptures",
+    "Paintings": "zynox_artwk_pntngs"
+  },
+  "aan_1": {
+    "Author_list": "xanes_papmg_autr_list",
+    "Affiliation": "xanes_papmg_affiliation",
+    "Citation": "xanes_papmg_citation",
+    "Author": "xanes_papmg_aut_info",
+    "Paper": "xanes_papmg_doc_paper"
+  },
+  "book_review": {
+    "book": "xylon1_books_book",
+    "review": "xylon1_books_review"
+  },
+  "car_road_race": {
+    "driver": "xenith_crd_drvr",
+    "race": "xenith_crd_rac_event"
+  },
+  "club_leader": {
+    "member": "xylon2_clmgr_mem_member",
+    "club_leader": "xylon2_clmgr_club_leader",
+    "club": "xylon2_clmgr_club_info"
+  },
+  "conference": {
+    "staff": "xeno_confr_staff",
+    "conference": "xeno_confr_conference",
+    "conference_participation": "xeno_confr_conference_participation",
+    "institution": "xeno_confr_institution"
+  },
+  "car_racing": {
+    "team_driver": "xeno42_racedom_team_driver",
+    "team": "xeno42_racedom_team",
+    "driver": "xeno42_racedom_drvr_profile",
+    "country": "xeno42_racedom_geography_country"
+  },
+  "boat_1": {
+    "Reserves": "xenon_marina_rsrv",
+    "Sailors": "xenon_marina_sailor_profile",
+    "Boats": "xenon_marina_bts"
+  },
+  "advertising_agencies": {
+    "Meetings": "adzen_adv_mtg_details",
+    "Agencies": "adzen_adv_agency_master",
+    "Payments": "adzen_adv_txn_payments",
+    "Staff_in_Meetings": "adzen_adv_staff_meeting_attendance",
+    "Invoices": "adzen_adv_invoice",
+    "Staff": "adzen_adv_staff",
+    "Clients": "adzen_adv_clnt_profile"
+  },
+  "book_1": {
+    "Client": "xanfor_bksys_client",
+    "Author_Book": "xanfor_bksys_author_book",
+    "Orders": "xanfor_bksys_order_txn",
+    "Book": "xanfor_bksys_bk_books",
+    "Books_Order": "xanfor_bksys_book_order",
+    "Author": "xanfor_bksys_aut_info"
+  },
+  "country_language": {
+    "countries": "xylon3_govstat_geo_country",
+    "languages": "xylon3_govstat_lu_language",
+    "official_languages": "xylon3_govstat_lang_official"
+  },
+  "district_spokesman": {
+    "spokesman": "zenith_govrep_spokesperson",
+    "spokesman_district": "zenith_govrep_spokesman_district",
+    "district": "zenith_govrep_geo_district"
+  },
+  "customers_and_orders": {
+    "Addresses": "proj_x9_cust_ord_addr",
+    "Customers": "proj_x9_cust_ord_customer",
+    "Order_Items": "proj_x9_cust_ord_order_item",
+    "Products": "proj_x9_cust_ord_prod_info",
+    "Customer_Orders": "proj_x9_cust_ord_customer_orders"
+  },
+  "headphone_store": {
+    "headphone": "aurora_hphs_audio_device",
+    "store": "aurora_hphs_str_store",
+    "stock": "aurora_hphs_inventory_stock"
+  },
+  "government_shift": {
+    "Customer_Interactions": "govx4_govsvc_cust_interaction",
+    "Analytical_Layer": "govx4_govsvc_anl_layer",
+    "Customers": "govx4_govsvc_usr_customer",
+    "Services": "govx4_govsvc_svc_service",
+    "Customers_and_Services": "govx4_govsvc_cust_svc",
+    "Channels": "govx4_govsvc_comms_channel",
+    "Integration_Platform": "govx4_govsvc_integ_platform"
+  },
+  "bbc_channels": {
+    "director": "xylon_bcast_dir_info",
+    "program": "xylon_bcast_prgm_overview",
+    "director_admin": "xylon_bcast_dir_admin",
+    "channel": "xylon_bcast_channel"
+  },
+  "bakery_1": {
+    "items": "xantri1_bkyco_item_master",
+    "receipts": "xantri1_bkyco_rcpt_header",
+    "customers": "xantri1_bkyco_cust_profile",
+    "goods": "xantri1_bkyco_inv_item"
+  },
+  "movie_2": {
+    "Movies": "xylon4_film_film_title",
+    "MovieTheaters": "xylon4_film_theater_info"
+  },
+  "cre_Doc_Workflow": {
+    "Documents": "zylox_docwf_document",
+    "Staff_in_Processes": "zylox_docwf_staff_processes",
+    "Authors": "zylox_docwf_authors",
+    "Documents_Processes": "zylox_docwf_doc_process",
+    "Process_Outcomes": "zylox_docwf_process_outcomes",
+    "Ref_Staff_Roles": "zylox_docwf_staff_roles",
+    "Business_Processes": "zylox_docwf_biz_process",
+    "Process_Status": "zylox_docwf_prcs_status",
+    "Staff": "zylox_docwf_staff"
+  },
+  "pilot_1": {
+    "Hangar": "xelop_aerox_hgr_storage",
+    "PilotSkills": "xelop_aerox_pilot_skills"
+  },
+  "online_exams": {
+    "Questions": "zyxor_examg_questn",
+    "Student_Assessments": "zyxor_examg_stdnt_assessment",
+    "Valid_Answers": "zyxor_examg_ans_valid",
+    "Students": "zyxor_examg_stdnt_profile",
+    "Student_Answers": "zyxor_examg_stu_answers",
+    "Questions_in_Exams": "zyxor_examg_que_in_exam",
+    "Exams": "zyxor_examg_exam_master"
+  },
+  "region_building": {
+    "building": "proj-x7_regbld_bldg_info",
+    "region": "proj-x7_regbld_region"
+  },
+  "book_press": {
+    "author": "xeno1_bkp_author",
+    "press": "xeno1_bkp_press",
+    "book": "xeno1_bkp_bkp_book"
+  },
+  "restaurant_bills": {
+    "customer": "zyneon_resbk_cust_profile",
+    "customer_order": "zyneon_resbk_cus_order",
+    "branch": "zyneon_resbk_bch_branch"
+  },
+  "e_commerce": {
+    "Customers": "zyngr_ecom_usr_customers",
+    "Invoices": "zyngr_ecom_invoice",
+    "Orders": "zyngr_ecom_order_txn",
+    "Order_Items": "zyngr_ecom_order_items",
+    "Customer_Payment_Methods": "zyngr_ecom_cust_payment_methods",
+    "Shipment_Items": "zyngr_ecom_shipment_items",
+    "Shipments": "zyngr_ecom_shipment_details",
+    "Products": "zyngr_ecom_prod_catalog"
+  },
+  "institution_sports": {
+    "Championship": "xylon5_instt_chmpshp",
+    "institution": "xylon5_instt_institution"
+  },
+  "soccer_3": {
+    "club": "xelo2_soccd_club_info",
+    "player": "xelo2_soccd_plr"
+  },
+  "video_game": {
+    "game": "vortex_vgam_game_summary",
+    "platform": "vortex_vgam_pltfrm",
+    "game_player": "vortex_vgam_game_player",
+    "player": "vortex_vgam_plr_profile"
+  },
+  "sing_contest": {
+    "songs": "xylon7_vocal_song_metadata",
+    "participants": "xylon7_vocal_usr_participants",
+    "performance_score": "xylon7_vocal_perf_score"
+  },
+  "university_rank": {
+    "major_ranking": "xylon6_univrank_mjr_ranking",
+    "overall_ranking": "xylon6_univrank_overall_ranking",
+    "major": "xylon6_univrank_mjr_info",
+    "university": "xylon6_univrank_univ_profile"
+  },
+  "vehicle_rent": {
+    "Vehicles": "venix_vrms_vehicle_info",
+    "Renting_history": "venix_vrms_renting_record",
+    "Customers": "venix_vrms_customer",
+    "Discount": "venix_vrms_dscnt"
+  },
+  "real_estate_rentals": {
+    "Features": "zyxre_rerent_feature",
+    "Property_Features": "zyxre_rerent_prp_features",
+    "Property_Photos": "zyxre_rerent_prp_photos",
+    "Ref_Room_Types": "zyxre_rerent_ref_room_types",
+    "Rooms": "zyxre_rerent_rms_room_info",
+    "User_Searches": "zyxre_rerent_usr_searches",
+    "Ref_Age_Categories": "zyxre_rerent_ref_age_categories",
+    "Addresses": "zyxre_rerent_addr_core",
+    "Ref_User_Categories": "zyxre_rerent_usr_categories",
+    "Ref_Property_Types": "zyxre_rerent_prp_types",
+    "User_Property_History": "zyxre_rerent_usr_property_record",
+    "Properties": "zyxre_rerent_prp_property_details",
+    "Users": "zyxre_rerent_usr_profile"
+  },
+  "tv_shows": {
+    "city_channel_radio": "zeta-4_mediax_city_radio_channel",
+    "city_channel_tv_show": "zeta-4_mediax_city_channel_tv_show",
+    "tv_show": "zeta-4_mediax_tvm_show",
+    "city_channel": "zeta-4_mediax_city_channel",
+    "radio": "zeta-4_mediax_radio_broadcast"
+  },
+  "warehouse_1": {
+    "Warehouses": "xylon8_whse_warehouse",
+    "Boxes": "xylon8_whse_whs_box"
+  },
+  "planet_1": {
+    "Has_Clearance": "xan9_splog_usr_clearance_status",
+    "Client": "xan9_splog_client",
+    "Planet": "xan9_splog_planet",
+    "Shipment": "xan9_splog_shipment",
+    "Package": "xan9_splog_pkg_package",
+    "Employee": "xan9_splog_emp_employee"
+  },
+  "vehicle_driver": {
+    "vehicle": "xeno2_vdrive_vhc_vehicle",
+    "driver": "xeno2_vdrive_drvr_profile",
+    "vehicle_driver": "xeno2_vdrive_veh_driver"
+  },
+  "cre_Students_Information_Systems": {
+    "Ref_Address_Types": "zynox1_stdsys_addr_type",
+    "Teachers": "zynox1_stdsys_edu_teacher",
+    "Behaviour_Monitoring": "zynox1_stdsys_beh_monitoring",
+    "Achievements": "zynox1_stdsys_achievement",
+    "Students": "zynox1_stdsys_stdnt_profile",
+    "Ref_Event_Types": "zynox1_stdsys_ref_event_types",
+    "Addresses": "zynox1_stdsys_addr_address",
+    "Transcripts": "zynox1_stdsys_txn_transcripts",
+    "Students_Addresses": "zynox1_stdsys_std_address",
+    "Student_Events": "zynox1_stdsys_std_event",
+    "Ref_Detention_Type": "zynox1_stdsys_ref_detention_type",
+    "Classes": "zynox1_stdsys_cls_summary",
+    "Detention": "zynox1_stdsys_std_detention",
+    "Ref_Achievement_Type": "zynox1_stdsys_achievement_type",
+    "Student_Loans": "zynox1_stdsys_std_loan"
+  },
+  "cre_Doc_and_collections": {
+    "Document_Subsets": "proj_x7_docmgmt_doc_subset",
+    "Collections": "proj_x7_docmgmt_col_collection",
+    "Document_Subset_Members": "proj_x7_docmgmt_doc_subset_members",
+    "Collection_Subsets": "proj_x7_docmgmt_coll_subset",
+    "Documents_in_Collections": "proj_x7_docmgmt_doc_in_colls",
+    "Collection_Subset_Members": "proj_x7_docmgmt_col_subset_members",
+    "Document_Objects": "proj_x7_docmgmt_doc_objects"
+  }
+}
