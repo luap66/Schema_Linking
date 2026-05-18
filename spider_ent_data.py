@@ -80,10 +80,3 @@ def get_ent_gold_schema_neu(question: dict) -> dict[str, list]:
             ent_columns.append(ent_column)
         gold_schema[ent_table_name] = ent_columns
     return gold_schema
-
-
-from transformers import AutoTokenizer
-
-tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/deepseek-coder-6.7b-base")
-
-get_spider_ent_data(tokenizer, 1024)
