@@ -2,7 +2,7 @@ import json
 
 from utils import parse_orig_sql, create_schema_linker_input
 
-with open('data/spider_ent/spider-Ent.json', 'r', encoding='utf-8') as f:
+with open('data/spider_ent/Spider-Ent.json', 'r', encoding='utf-8') as f:
     spider_ent = json.load(f)
 
 with open('data/spider_ent/data_assets.json', 'r', encoding='utf-8') as f:
@@ -33,11 +33,11 @@ def get_gold_tables_ddls(item: dict) -> list:
     return tables
 
 
-def get_spider_ent_data(tokenizer):
+def get_spider_ent_data(tokenizer, max_tokens):
     schema_linker_inputs = []
     for q in spider_ent:
         db_ddls = schema[q['data_asset']].values()
-        schema_linker_input = create_schema_linker_input(db_ddls, q['question'], 3000, tokenizer)
+        schema_linker_input = create_schema_linker_input(db_ddls, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['original_SQL'])
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
     return schema_linker_inputs

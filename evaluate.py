@@ -34,7 +34,7 @@ LORA_PATH = "exsl_lora"
 HEAD_PATH = "exsl_head.pt"
 HIDDEN_SIZE = 4096
 MAX_TOKENS = 1024
-THRESHOLD = 0.5   # sigmoid threshold for positive prediction
+LOGIT_THRESHOLD = -3.0   # sigmoid threshold for positive prediction
 
 
 # ---------------------------------------------------------------------------
@@ -107,10 +107,11 @@ def predict_schema(model, tokenizer, item: dict) -> dict[str, list[str]]:
                 open_pos[:n],
                 close_pos[:n],
             )
-        probs = torch.sigmoid(logits).cpu().tolist()
-
-        for (table, col), prob in zip(candidates[:n], probs):
-            if prob >= THRESHOLD:
+            
+        logits_list = logits.cpu().tolist()
+        
+        for (table, col), logit in zip(candidates[:n], logits_list):
+            if logit >= LOGIT_THRESHOLD:
                 t_low = table.lower()
                 pred_schema.setdefault(t_low, []).append(col.lower())
 
@@ -189,7 +190,7 @@ def evaluate():
     # Spider Dev
     # ------------------------------------------------------------------
     print("\nLoading Spider Dev …")
-    spider_dev_data = get_spider_val(tokenizer)
+    spider_dev_data = get_spider_val(tokenizer, MAX_TOKENS)
 
     preds_dev, golds_dev = [], []
     for item in tqdm(spider_dev_data, desc="Spider Dev", dynamic_ncols=True):
@@ -202,7 +203,7 @@ def evaluate():
     # Spider-Ent
     # ------------------------------------------------------------------
     print("\nLoading Spider-Ent …")
-    spider_ent_data = get_spider_ent_data(tokenizer)
+    spider_ent_data = get_spider_ent_data(tokenizer, MAX_TOKENS)
 
     preds_ent, golds_ent = [], []
     for item, question in tqdm(

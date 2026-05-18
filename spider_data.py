@@ -14,18 +14,18 @@ spider_train = load_dataset("xlangai/spider", split="train")
 spider_val = load_dataset("xlangai/spider", split="validation")
 
 
-def get_spider_train(tokenizer) -> list[dict]:
-    return get_spider_x_y_set(spider_train, tokenizer)
+def get_spider_train(tokenizer, max_tokens) -> list[dict]:
+    return get_spider_x_y_set(spider_train, tokenizer, max_tokens)
 
-def get_spider_val(tokenizer) -> list[dict]:
-    return get_spider_x_y_set(spider_val, tokenizer)
+def get_spider_val(tokenizer, max_tokens) -> list[dict]:
+    return get_spider_x_y_set(spider_val, tokenizer, max_tokens)
 
-def get_spider_x_y_set(data_set: Dataset, tokenizer) -> list[dict]:
+def get_spider_x_y_set(data_set: Dataset, tokenizer, max_tokens) -> list[dict]:
     schema_linker_inputs = []
     spider_schema_ddls = generate_spider_ddl(spider_tables)
     for q in data_set:
         db_ddls = spider_schema_ddls[q['db_id']]
-        schema_linker_input = create_schema_linker_input(db_ddls, q['question'], 3000, tokenizer)
+        schema_linker_input = create_schema_linker_input(db_ddls, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['query'])
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
     return schema_linker_inputs
@@ -69,11 +69,3 @@ def generate_spider_ddl(tables_json: list) -> dict[str, list]:
             schema[db_id].append(ddl)
 
     return schema
-
-
-from spider_data import get_spider_train
-from transformers import AutoTokenizer
-
-tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/deepseek-coder-6.7b-base")
-
-print(get_spider_train(tokenizer))

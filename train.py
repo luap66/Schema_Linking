@@ -21,6 +21,9 @@ from transformers import AutoModel, AutoTokenizer, BitsAndBytesConfig
 
 from model import ExSLModel
 from spider_data import get_spider_train
+import os
+os.environ["USE_TF"] = "0"
+os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 # ---------------------------------------------------------------------------
 # Hyperparameters
@@ -93,8 +96,8 @@ def setup_model_and_tokenizer():
     base_model = AutoModel.from_pretrained(
         MODEL_NAME,
         quantization_config=bnb_config,
-        output_hidden_states=True,
-        device_map={"": "cuda:0"},
+        device_map="auto",
+        output_hidden_states=True
     )
     lora_config = LoraConfig(
         r=LORA_RANK,
@@ -108,7 +111,8 @@ def setup_model_and_tokenizer():
 
     model = ExSLModel(base_model, hidden_size=HIDDEN_SIZE)
     # The base model is on CUDA via device_map; move the linear head to CUDA as well
-    model.w_relevance = model.w_relevance.to("cuda")
+    device = next(base_model.parameters()).device
+    model.w_relevance = model.w_relevance.to(device)
     return model, tokenizer
 
 
@@ -140,7 +144,7 @@ def train():
     model, tokenizer = setup_model_and_tokenizer()
 
     print("\nLoading Spider training data …")
-    raw_data = get_spider_train(tokenizer)
+    raw_data = get_spider_train(tokenizer, MAX_TOKENS)
     samples = build_training_samples(raw_data)
     print(f"Training samples (prompt chunks): {len(samples)}")
 
