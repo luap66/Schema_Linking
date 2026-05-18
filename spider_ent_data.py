@@ -1,6 +1,6 @@
 import json
 
-from utils import parse_orig_sql, create_schema_linker_input
+from utils import parse_orig_sql, create_schema_linker_input, parse_ddl
 
 with open('data/spider_ent/Spider-Ent.json', 'r', encoding='utf-8') as f:
     spider_ent = json.load(f)
@@ -35,9 +35,18 @@ def get_gold_tables_ddls(item: dict) -> list:
 
 def get_spider_ent_data(tokenizer, max_tokens):
     schema_linker_inputs = []
+    schema_with_parsed_candidates = {}
+
+    for data_asset, ddls in schema.items():
+        data_asset_tables = []
+        for id, ddl in ddls.items():
+            parsed_ddl = parse_ddl(ddl)
+            data_asset_tables.append({"ddl": ddl, "candidates": parsed_ddl})
+        schema_with_parsed_candidates[data_asset] = data_asset_tables
+
     for q in spider_ent:
-        db_ddls = schema[q['data_asset']].values()
-        schema_linker_input = create_schema_linker_input(db_ddls, q['question'], max_tokens, tokenizer)
+        db_ddls_and_candidates = schema_with_parsed_candidates.get(q['data_asset'])
+        schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['original_SQL'])
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
     return schema_linker_inputs
@@ -71,3 +80,10 @@ def get_ent_gold_schema_neu(question: dict) -> dict[str, list]:
             ent_columns.append(ent_column)
         gold_schema[ent_table_name] = ent_columns
     return gold_schema
+
+
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/deepseek-coder-6.7b-base")
+
+get_spider_ent_data(tokenizer, 1024)

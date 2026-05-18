@@ -99,35 +99,36 @@ def has_join_and_alias(sql: str) -> dict:
     }
 
 
-def create_schema_linker_input(table_ddls: str, question_text: str, context_window: int, tokenizer) -> list:
+def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, tokenizer) -> list:
     """Builds schema linker inputs for a single question. Splits the database schema into multiple
     chunks if the full schema exceeds the context window size.
     Returns a list of prompt strings, each containing a subset of tables and their candidate columns."""
     schema_linker_inputs = []
     collected_ddl_input = ""
     collected_columns_input = ""
-    for current_ddl_input in table_ddls:
+    for table in tables_ddl_canditates:
 
-        table_dict = parse_ddl(current_ddl_input)
-        table = table_dict.get('table')
-        columns_list = table_dict.get('columns')
+        table_ddl = table.get("ddl")
+        table_name = table.get('candidates').get('table')
+        column_list = table.get('candidates').get('columns')
+
         current_column_input = ""
 
-        for column in columns_list:
-            current_column_input = current_column_input + "\n« " + table + " " + column + "»"
+        for column in column_list:
+            current_column_input = current_column_input + "\n« " + table_name + " " + column + "»"
 
-        new_collected = collected_ddl_input + current_ddl_input + question_text + collected_columns_input + current_column_input
+        new_collected = collected_ddl_input + table_ddl + question_text + collected_columns_input + current_column_input
         token_count = len(tokenizer.encode(new_collected))
         if token_count >= context_window:
             # Append old strings to the schema linker inputs, because adding another table would surpass the context window size.
             schema_input_in_context_window_size = collected_ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + collected_columns_input
             schema_linker_inputs.append(schema_input_in_context_window_size)
             # Reset the schema_input variables to the values of this table, so the table can be included in the next schema linker inputs.
-            collected_ddl_input = current_ddl_input
+            collected_ddl_input = table_ddl
             collected_columns_input = current_column_input
         else:
             # The schema input is still small enough, so the schema of the current table can be concatenated to the schema_input item
-            collected_ddl_input = collected_ddl_input + "\n" + current_ddl_input
+            collected_ddl_input = collected_ddl_input + "\n" + table_ddl
             collected_columns_input = collected_columns_input + current_column_input
 
     # Append the last remaining block

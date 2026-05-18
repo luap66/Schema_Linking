@@ -1,5 +1,5 @@
 from datasets import load_dataset, Dataset
-from utils import create_schema_linker_input, parse_orig_sql
+from utils import create_schema_linker_input, parse_orig_sql, parse_ddl
 import json
 
 from dotenv import load_dotenv
@@ -23,9 +23,17 @@ def get_spider_val(tokenizer, max_tokens) -> list[dict]:
 def get_spider_x_y_set(data_set: Dataset, tokenizer, max_tokens) -> list[dict]:
     schema_linker_inputs = []
     spider_schema_ddls = generate_spider_ddl(spider_tables)
+    spider_schema_ddls_and_candidates = {}
+    for db, ddls in spider_schema_ddls.items():
+        db_table_info = []
+        for ddl in ddls:
+            parsed_ddl = parse_ddl(ddl)
+            db_table_info.append({"ddl": ddl, "candidates": parsed_ddl})
+        spider_schema_ddls_and_candidates[db] = db_table_info
+
     for q in data_set:
-        db_ddls = spider_schema_ddls[q['db_id']]
-        schema_linker_input = create_schema_linker_input(db_ddls, q['question'], max_tokens, tokenizer)
+        db_tables = spider_schema_ddls_and_candidates[q['db_id']]
+        schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['query'])
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
     return schema_linker_inputs
@@ -69,3 +77,9 @@ def generate_spider_ddl(tables_json: list) -> dict[str, list]:
             schema[db_id].append(ddl)
 
     return schema
+
+from transformers import AutoTokenizer
+
+tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/deepseek-coder-6.7b-base")
+
+get_spider_train(tokenizer, 1024)
