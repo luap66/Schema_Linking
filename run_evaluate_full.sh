@@ -13,6 +13,7 @@ docker run --rm \
     --device /dev/nvidia-uvm:/dev/nvidia-uvm \
     --device /dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools \
     --shm-size=16g \
+    -v "$(pwd)":/app \
     -v "$OUTPUT_DIR":/app/output \
     -v "$HF_CACHE":/root/.cache/huggingface \
     -e HF_HOME=/root/.cache/huggingface \
