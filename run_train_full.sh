@@ -26,4 +26,4 @@ docker run --rm \
     -e HF_HOME=/root/.cache/huggingface \
     -e OUTPUT_DIR=/app/output \
     "$IMAGE_NAME" \
-    python3 train_full.py
+    python3 train_full.py "$@"

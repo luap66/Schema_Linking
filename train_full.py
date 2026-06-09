@@ -16,6 +16,7 @@ Saves:
     exsl_head_full.pt — state_dict of the w_relevance linear head
 """
 
+import argparse
 import os
 import re
 
@@ -32,22 +33,36 @@ os.environ["USE_TF"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 
 # ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="ExSL Full Finetuning")
+    parser.add_argument("--model", default="deepseek-ai/deepseek-coder-6.7b-base")
+    parser.add_argument("--epochs", type=int, default=2)
+    parser.add_argument("--lr", type=float, default=1e-5)
+    parser.add_argument("--grad_accum", type=int, default=16)
+    parser.add_argument("--max_tokens", type=int, default=1024)
+    parser.add_argument("--no_grad_ckpt", action="store_true", help="Disable gradient checkpointing")
+    return parser.parse_args()
+
+args = parse_args()
+
+# ---------------------------------------------------------------------------
 # Hyperparameters
 # ---------------------------------------------------------------------------
-MODEL_NAME = "deepseek-ai/deepseek-coder-6.7b-base"
+MODEL_NAME = args.model
 HIDDEN_SIZE = 4096
-NUM_EPOCHS = 2
-LR = 1e-5
-GRAD_ACCUM_STEPS = 16   # effective batch size 16
-MAX_TOKENS = 1024
+NUM_EPOCHS = args.epochs
+LR = args.lr
+GRAD_ACCUM_STEPS = args.grad_accum
+MAX_TOKENS = args.max_tokens
 # Output directory — override with OUTPUT_DIR env var (e.g. /app/output in Docker)
 _OUT = os.environ.get("OUTPUT_DIR", ".")
 SAVE_MODEL_PATH = os.path.join(_OUT, "exsl_full")
 SAVE_HEAD_PATH = os.path.join(_OUT, "exsl_head_full.pt")
 
-# Gradient checkpointing trades compute for memory — required on H100 (80 GB)
-# to keep AdamW optimizer states + model + gradients within budget.
-USE_GRADIENT_CHECKPOINTING = True
+USE_GRADIENT_CHECKPOINTING = not args.no_grad_ckpt
 
 # H100 natively supports bf16; this falls back to fp16 on older GPUs.
 DTYPE = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
