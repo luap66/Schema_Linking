@@ -18,6 +18,8 @@ docker build -t "$IMAGE_NAME" .
 docker run --rm \
     --runtime=nvidia \
     -e NVIDIA_VISIBLE_DEVICES=all \
+    --device /dev/nvidia-uvm:/dev/nvidia-uvm \
+    --device /dev/nvidia-uvm-tools:/dev/nvidia-uvm-tools \
     --shm-size=16g \
     -v "$OUTPUT_DIR":/app/output \
     -v "$HF_CACHE":/root/.cache/huggingface \

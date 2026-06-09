@@ -40,7 +40,7 @@ DTYPE = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
 def load_model(tokenizer):
     base_model = AutoModel.from_pretrained(
         MODEL_PATH,
-        torch_dtype=DTYPE,
+        dtype=DTYPE,
         device_map={"": "cuda:0"},
         output_hidden_states=True,
     )

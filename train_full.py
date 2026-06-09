@@ -87,7 +87,7 @@ def setup_model_and_tokenizer():
     print(f"Loading {MODEL_NAME} in {DTYPE} (full weights, no quantization) …")
     base_model = AutoModel.from_pretrained(
         MODEL_NAME,
-        torch_dtype=DTYPE,
+        dtype=DTYPE,
         device_map="auto",
         output_hidden_states=True,
     )
