@@ -11,6 +11,8 @@ Expects trained artefacts:
     exsl_head_full.pt   — w_relevance linear head state_dict
 """
 
+import argparse
+import os
 import re
 
 import torch
@@ -22,13 +24,29 @@ from spider_data import get_spider_val
 from spider_ent_data import get_ent_gold_schema_neu, get_spider_ent_data, spider_ent
 
 # ---------------------------------------------------------------------------
+# Argument parsing
+# ---------------------------------------------------------------------------
+
+def parse_args():
+    parser = argparse.ArgumentParser(description="ExSL Full Finetuning — Evaluation")
+    parser.add_argument("--max_tokens", type=int, default=1024)
+    parser.add_argument("--threshold", type=float, default=-3.0, help="Logit threshold for positive prediction")
+    parser.add_argument("--dataset", choices=["spider", "spider_ent", "both"], default="both")
+    _out = os.environ.get("OUTPUT_DIR", ".")
+    parser.add_argument("--model_path", default=os.path.join(_out, "exsl_full"))
+    parser.add_argument("--head_path", default=os.path.join(_out, "exsl_head_full.pt"))
+    return parser.parse_args()
+
+args = parse_args()
+
+# ---------------------------------------------------------------------------
 # Config
 # ---------------------------------------------------------------------------
-MODEL_PATH = "exsl_full"
-HEAD_PATH = "exsl_head_full.pt"
+MODEL_PATH = args.model_path
+HEAD_PATH = args.head_path
 HIDDEN_SIZE = 4096
-MAX_TOKENS = 1024
-LOGIT_THRESHOLD = -3.0
+MAX_TOKENS = args.max_tokens
+LOGIT_THRESHOLD = args.threshold
 
 DTYPE = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
 
@@ -135,21 +153,23 @@ def evaluate():
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
     model = load_model(tokenizer)
 
-    print("\nLoading Spider Dev …")
-    spider_dev_data = get_spider_val(tokenizer, MAX_TOKENS)
-    preds_dev, golds_dev = [], []
-    for item in tqdm(spider_dev_data, desc="Spider Dev", dynamic_ncols=True):
-        preds_dev.append(predict_schema(model, tokenizer, item))
-        golds_dev.append(item["gold_schema"])
-    _print_metrics("Spider Dev", compute_metrics(preds_dev, golds_dev))
+    if args.dataset in ("spider", "both"):
+        print("\nLoading Spider Dev …")
+        spider_dev_data = get_spider_val(tokenizer, MAX_TOKENS)
+        preds_dev, golds_dev = [], []
+        for item in tqdm(spider_dev_data, desc="Spider Dev", dynamic_ncols=True):
+            preds_dev.append(predict_schema(model, tokenizer, item))
+            golds_dev.append(item["gold_schema"])
+        _print_metrics("Spider Dev", compute_metrics(preds_dev, golds_dev))
 
-    print("\nLoading Spider-Ent …")
-    spider_ent_data = get_spider_ent_data(tokenizer, MAX_TOKENS)
-    preds_ent, golds_ent = [], []
-    for item, question in tqdm(zip(spider_ent_data, spider_ent), total=len(spider_ent), desc="Spider-Ent", dynamic_ncols=True):
-        preds_ent.append(predict_schema(model, tokenizer, item))
-        golds_ent.append(get_ent_gold_schema_neu(question))
-    _print_metrics("Spider-Ent", compute_metrics(preds_ent, golds_ent))
+    if args.dataset in ("spider_ent", "both"):
+        print("\nLoading Spider-Ent …")
+        spider_ent_data = get_spider_ent_data(tokenizer, MAX_TOKENS)
+        preds_ent, golds_ent = [], []
+        for item, question in tqdm(zip(spider_ent_data, spider_ent), total=len(spider_ent), desc="Spider-Ent", dynamic_ncols=True):
+            preds_ent.append(predict_schema(model, tokenizer, item))
+            golds_ent.append(get_ent_gold_schema_neu(question))
+        _print_metrics("Spider-Ent", compute_metrics(preds_ent, golds_ent))
 
 
 if __name__ == "__main__":
