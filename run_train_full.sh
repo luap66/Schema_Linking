@@ -17,7 +17,7 @@ docker build -t "$IMAGE_NAME" .
 # Run training
 docker run --rm \
     --runtime=nvidia \
-    --gpus '"device=0"' \
+    --gpus all \
     --shm-size=16g \
     -v "$OUTPUT_DIR":/app/output \
     -v "$HF_CACHE":/root/.cache/huggingface \
