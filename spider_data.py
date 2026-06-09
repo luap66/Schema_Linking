@@ -77,9 +77,3 @@ def generate_spider_ddl(tables_json: list) -> dict[str, list]:
             schema[db_id].append(ddl)
 
     return schema
-
-from transformers import AutoTokenizer
-
-tokenizer = AutoTokenizer.from_pretrained("deepseek-ai/deepseek-coder-6.7b-base")
-
-get_spider_train(tokenizer, 1024)
