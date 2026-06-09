@@ -23,5 +23,6 @@ docker run --rm \
     -v "$HF_CACHE":/root/.cache/huggingface \
     -e HF_HOME=/root/.cache/huggingface \
     -e OUTPUT_DIR=/app/output \
+    -e NVIDIA_DISABLE_REQUIRE=1 \
     "$IMAGE_NAME" \
     python3 train_full.py
