@@ -15,7 +15,8 @@ RUN pip3 install --no-cache-dir \
     tokenizers==0.22.2 \
     tqdm==4.67.3 \
     datasets==4.8.5 \
-    huggingface_hub==1.15.0
+    huggingface_hub==1.15.0 \
+    acryl-sqlglot==25.25.2.dev9
 
 # Copy project files
 COPY *.py ./
