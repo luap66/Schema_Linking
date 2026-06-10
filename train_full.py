@@ -142,6 +142,7 @@ def train():
     print(f"Model:   {MODEL_NAME}")
     print(f"Epochs:  {NUM_EPOCHS}  |  LR: {LR}  |  Grad-Accum: {GRAD_ACCUM_STEPS}")
     print(f"dtype:   {DTYPE}")
+    print(f"max_tokens: {MAX_TOKENS}")
 
     model, tokenizer = setup_model_and_tokenizer()
 
