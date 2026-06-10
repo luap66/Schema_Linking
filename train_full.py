@@ -40,7 +40,7 @@ def parse_args():
     parser = argparse.ArgumentParser(description="ExSL Full Finetuning")
     parser.add_argument("--model", default="deepseek-ai/deepseek-coder-6.7b-base")
     parser.add_argument("--epochs", type=int, default=2)
-    parser.add_argument("--lr", type=float, default=1e-5)
+    parser.add_argument("--lr", type=float, default=5e-6)
     parser.add_argument("--grad_accum", type=int, default=16)
     parser.add_argument("--max_tokens", type=int, default=1024)
     parser.add_argument("--no_grad_ckpt", action="store_true", help="Disable gradient checkpointing")
@@ -102,7 +102,7 @@ def setup_model_and_tokenizer():
     print(f"Loading {MODEL_NAME} in {DTYPE} (full weights, no quantization) …")
     base_model = AutoModel.from_pretrained(
         MODEL_NAME,
-        dtype=DTYPE,
+        torch_dtype=DTYPE,
         device_map="auto",
         output_hidden_states=True,
     )
@@ -150,7 +150,7 @@ def train():
     samples = build_training_samples(raw_data)
     print(f"Training samples (prompt chunks): {len(samples)}")
 
-    optimizer = AdamW(model.parameters(), lr=LR, weight_decay=0.01)
+    optimizer = AdamW(model.parameters(), lr=LR, weight_decay=0.0)
     loss_fn = nn.BCEWithLogitsLoss()
 
     device = next(model.base.parameters()).device
