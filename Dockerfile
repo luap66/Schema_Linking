@@ -7,7 +7,8 @@ WORKDIR /app
 
 # Install only the packages needed for training (no Jupyter etc.)
 RUN pip3 install --no-cache-dir \
-    torch==2.12.0 \
+    torch==2.12.0 --index-url https://download.pytorch.org/whl/cu128 && \
+    pip3 install --no-cache-dir \
     transformers==5.8.1 \
     accelerate==1.13.0 \
     peft==0.13.2 \
