@@ -150,6 +150,8 @@ def _print_metrics(name: str, m: dict) -> None:
 # ---------------------------------------------------------------------------
 
 def evaluate():
+    print(f"Max Tokens : {MAX_TOKENS}")
+    print(f"Args: {args}")
     tokenizer = AutoTokenizer.from_pretrained(MODEL_PATH)
     model = load_model(tokenizer)
 

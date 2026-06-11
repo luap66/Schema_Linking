@@ -20,12 +20,9 @@ import argparse
 import os
 import re
 
-import math
-
 import torch
 import torch.nn as nn
 from torch.optim import AdamW
-from torch.optim.lr_scheduler import LambdaLR
 from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 
@@ -43,11 +40,10 @@ def parse_args():
     parser = argparse.ArgumentParser(description="ExSL Full Finetuning")
     parser.add_argument("--model", default="deepseek-ai/deepseek-coder-6.7b-base")
     parser.add_argument("--epochs", type=int, default=2)
-    parser.add_argument("--lr", type=float, default=1e-6)
+    parser.add_argument("--lr", type=float, default=5e-6)
     parser.add_argument("--grad_accum", type=int, default=16)
-    parser.add_argument("--max_tokens", type=int, default=1024)
+    parser.add_argument("--max_tokens", type=int, default=3000)
     parser.add_argument("--no_grad_ckpt", action="store_true", help="Disable gradient checkpointing")
-    parser.add_argument("--warmup_ratio", type=float, default=0.1, help="Fraction of total steps for LR warmup")
     return parser.parse_args()
 
 args = parse_args()
@@ -160,19 +156,6 @@ def train():
 
     device = next(model.base.parameters()).device
 
-    # Warmup + cosine decay scheduler
-    total_optim_steps = (len(samples) // GRAD_ACCUM_STEPS) * NUM_EPOCHS
-    warmup_steps = int(args.warmup_ratio * total_optim_steps)
-    print(f"Optimizer steps: {total_optim_steps}  |  Warmup: {warmup_steps}")
-
-    def lr_lambda(current_step):
-        if current_step < warmup_steps:
-            return current_step / max(1, warmup_steps)
-        progress = (current_step - warmup_steps) / max(1, total_optim_steps - warmup_steps)
-        return 0.5 * (1.0 + math.cos(math.pi * progress))
-
-    scheduler = LambdaLR(optimizer, lr_lambda)
-
     for epoch in range(NUM_EPOCHS):
         print(f"\n--- Epoch {epoch + 1}/{NUM_EPOCHS} ---")
         model.train()
@@ -215,17 +198,15 @@ def train():
                 # Gradient clipping helps stabilise full finetuning
                 torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
                 optimizer.step()
-                scheduler.step()
                 optimizer.zero_grad()
                 logged_steps += 1
                 avg = total_loss / (logged_steps * GRAD_ACCUM_STEPS)
-                pbar.set_postfix(loss=f"{avg:.4f}", lr=f"{scheduler.get_last_lr()[0]:.2e}")
+                pbar.set_postfix(loss=f"{avg:.4f}")
 
         # Flush remaining gradients at epoch end
         if (len(samples) % GRAD_ACCUM_STEPS) != 0:
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
-            scheduler.step()
             optimizer.zero_grad()
 
     # -----------------------------------------------------------------------
