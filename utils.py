@@ -56,6 +56,17 @@ def parse_orig_sql(sql) -> dict:
             local.extend(collect(join))
         return local
 
+    # SELECT * behandeln: Tabellen erfassen, auch wenn keine expliziten Spalten genannt werden
+    for star in tree.find_all(exp.Star):
+        parent_select = star.find_ancestor(exp.Select)
+        if parent_select is None:
+            continue
+        local_tables = local_tables_of_select(parent_select)
+        for t in local_tables:
+            table_name = t.name.lower()
+            # Tabelle ins Result aufnehmen (leere Menge = alle Spalten via *)
+            result[table_name]  # defaultdict erzeugt leeres set
+
     # Alle genutzten Columns sammeln
     for col in tree.find_all(exp.Column):
         table_alias = col.table.lower()
