@@ -35,7 +35,7 @@ def get_spider_x_y_set(data_set: Dataset, tokenizer, max_tokens) -> list[dict]:
         db_tables = spider_schema_ddls_and_candidates[q['db_id']]
         schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['query'])
-        schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
+        schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema, "sql": q['query']})
     return schema_linker_inputs
 
 def generate_spider_ddl(tables_json: list) -> dict[str, list]:
