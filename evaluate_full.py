@@ -29,7 +29,7 @@ from spider_ent_data import get_ent_gold_schema_neu, get_spider_ent_data, spider
 
 def parse_args():
     parser = argparse.ArgumentParser(description="ExSL Full Finetuning — Evaluation")
-    parser.add_argument("--max_tokens", type=int, default=1024)
+    parser.add_argument("--max_tokens", type=int, default=3000)
     parser.add_argument("--threshold", type=float, default=-3.0, help="Logit threshold for positive prediction")
     parser.add_argument("--dataset", choices=["spider", "spider_ent", "both"], default="both")
     _out = os.environ.get("OUTPUT_DIR", ".")

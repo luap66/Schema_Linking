@@ -151,7 +151,7 @@ def train():
     samples = build_training_samples(raw_data)
     print(f"Training samples (prompt chunks): {len(samples)}")
 
-    optimizer = AdamW(model.parameters(), lr=LR, weight_decay=0.01)
+    optimizer = AdamW(model.parameters(), lr=LR, weight_decay=0.00)
     loss_fn = nn.BCEWithLogitsLoss()
 
     device = next(model.base.parameters()).device
