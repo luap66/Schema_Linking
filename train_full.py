@@ -18,6 +18,7 @@ Saves:
 
 import argparse
 import os
+import random
 import re
 
 import torch
@@ -158,6 +159,7 @@ def train():
 
     for epoch in range(NUM_EPOCHS):
         print(f"\n--- Epoch {epoch + 1}/{NUM_EPOCHS} ---")
+        random.shuffle(samples)
         model.train()
         optimizer.zero_grad()
 
