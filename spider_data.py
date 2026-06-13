@@ -35,6 +35,14 @@ def get_spider_x_y_set(data_set: Dataset, tokenizer, max_tokens) -> list[dict]:
         db_tables = spider_schema_ddls_and_candidates[q['db_id']]
         schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['query'])
+        for table, columns in gold_schema.items():
+            # All parsed SQLs that don't have any columns in the gold schema because of SELECT * get the first column
+            # of the table
+            if len(columns) == 0:
+                for schema_table in db_tables:
+                    schema_table_name = schema_table['candidates']['table']
+                    if schema_table_name.lower() == table.lower():
+                        columns.append(schema_table['candidates']['columns'][0])
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema, "sql": q['query']})
     return schema_linker_inputs
 
