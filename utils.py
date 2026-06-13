@@ -49,7 +49,7 @@ def parse_orig_sql(sql) -> dict:
             return tables
 
         local = []
-        from_clause = select_node.args.get('from')
+        from_clause = select_node.args.get('from_') or select_node.args.get('from')
         if from_clause:
             local.extend(collect(from_clause))
         for join in (select_node.args.get('joins') or []):
