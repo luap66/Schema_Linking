@@ -26,6 +26,16 @@ with open('data/spider_ent/table_name_mappings.json', 'r', encoding='utf-8') as 
     }
 
 
+# Schema-Candidates auf Modulebene vorberechnen, damit get_ent_gold_schema_neu darauf zugreifen kann
+schema_with_parsed_candidates = {}
+for _data_asset, _ddls in schema.items():
+    _data_asset_tables = []
+    for _id, _ddl in _ddls.items():
+        parsed_ddl = parse_ddl(_ddl)
+        _data_asset_tables.append({"ddl": _ddl, "candidates": parsed_ddl})
+    schema_with_parsed_candidates[_data_asset] = _data_asset_tables
+
+
 def get_gold_tables_ddls(item: dict) -> list:
     item_db = schema[item['data_asset']]
     gold_ids = item['gold_table_ids']
@@ -35,19 +45,18 @@ def get_gold_tables_ddls(item: dict) -> list:
 
 def get_spider_ent_data(tokenizer, max_tokens):
     schema_linker_inputs = []
-    schema_with_parsed_candidates = {}
-
-    for data_asset, ddls in schema.items():
-        data_asset_tables = []
-        for id, ddl in ddls.items():
-            parsed_ddl = parse_ddl(ddl)
-            data_asset_tables.append({"ddl": ddl, "candidates": parsed_ddl})
-        schema_with_parsed_candidates[data_asset] = data_asset_tables
 
     for q in spider_ent:
         db_ddls_and_candidates = schema_with_parsed_candidates.get(q['data_asset'])
         schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['original_SQL'])
+        for table, columns in gold_schema.items():
+            # SELECT * erzeugt leere Column-Liste — erste Spalte der Tabelle eintragen
+            if len(columns) == 0:
+                for schema_table in db_ddls_and_candidates:
+                    schema_table_name = schema_table['candidates']['table']
+                    if schema_table_name.lower() == table.lower():
+                        columns.append(schema_table['candidates']['columns'][0])
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
     return schema_linker_inputs
 
@@ -69,7 +78,14 @@ def get_ent_gold_schema_neu(question: dict) -> dict[str, list]:
     gold_schema = {}
     eval_db = question['eval_db']
     orig_gold_schema = parse_orig_sql(question['original_SQL'])
+    # SELECT * Fix: leere Column-Listen mit erster Spalte der Tabelle füllen
+    data_asset_tables = schema_with_parsed_candidates.get(question['data_asset'], [])
     for orig_table, orig_columns in orig_gold_schema.items():
+        if len(orig_columns) == 0:
+            for schema_table in data_asset_tables:
+                schema_table_name = schema_table['candidates']['table']
+                if schema_table_name.lower() == orig_table.lower():
+                    orig_columns.append(schema_table['candidates']['columns'][0])
         ent_table_name = table_mappings.get(eval_db).get(orig_table.lower())
         ent_columns = []
         for orig_column in orig_columns:

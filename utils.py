@@ -69,6 +69,10 @@ def parse_orig_sql(sql) -> dict:
 
     # Alle genutzten Columns sammeln
     for col in tree.find_all(exp.Column):
+        # Spider SQL nutzt doppelte Anführungszeichen für String-Werte (z.B. WHERE col = "USA").
+        # sqlglot parst diese als quoted Identifier statt als Literal — überspringen.
+        if col.this.quoted:
+            continue
         table_alias = col.table.lower()
         col_name = col.name.lower()
         if not col_name:
@@ -110,7 +114,7 @@ def has_join_and_alias(sql: str) -> dict:
     }
 
 
-def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, tokenizer) -> list:
+def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int) -> list:
     """Builds schema linker inputs for a single question. Splits the database schema into multiple
     chunks if the full schema exceeds the context window size.
     Returns a list of prompt strings, each containing a subset of tables and their candidate columns."""
@@ -129,7 +133,7 @@ def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, 
             current_column_input = current_column_input + "\n« " + table_name + " " + column + "»"
 
         new_collected = collected_ddl_input + table_ddl + question_text + collected_columns_input + current_column_input
-        token_count = len(tokenizer.encode(new_collected))
+        token_count = len(new_collected)
         if token_count >= context_window:
             # Append old strings to the schema linker inputs, because adding another table would surpass the context window size.
             schema_input_in_context_window_size = collected_ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + collected_columns_input
