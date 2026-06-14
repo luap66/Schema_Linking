@@ -1,6 +1,8 @@
+import json
+import re
+
 from datasets import load_dataset, Dataset
 from utils import create_schema_linker_input, parse_orig_sql, parse_ddl
-import json
 
 from dotenv import load_dotenv
 
@@ -70,19 +72,25 @@ def generate_spider_ddl(tables_json: list) -> dict[str, list]:
             cols = columns_by_table[table_idx]
             pk_col_set = {col_name for col_idx, col_name, _ in cols if col_idx in primary_keys}
 
+            def _q(name):
+                """Nur quoten wenn Name Sonderzeichen oder Leerzeichen enthält."""
+                if re.search(r'[^A-Za-z0-9_]', name):
+                    return f'`{name}`'
+                return name
+
             col_defs = []
             for _, col_name, sql_type in cols:
                 pk_suffix = ' PRIMARY KEY' if col_name in pk_col_set else ''
-                col_defs.append(f'{col_name} {sql_type}{pk_suffix}')
+                col_defs.append(f'{_q(col_name)} {sql_type}{pk_suffix}')
 
             for fk_from, fk_to in db['foreign_keys']:
                 if db['column_names_original'][fk_from][0] == table_idx:
                     fk_from_col = db['column_names_original'][fk_from][1]
                     fk_to_table = db['table_names_original'][db['column_names_original'][fk_to][0]]
                     fk_to_col = db['column_names_original'][fk_to][1]
-                    col_defs.append(f'FOREIGN KEY({fk_from_col}) REFERENCES {fk_to_table}({fk_to_col})')
+                    col_defs.append(f'FOREIGN KEY({_q(fk_from_col)}) REFERENCES {_q(fk_to_table)}({_q(fk_to_col)})')
 
-            ddl = f'CREATE TABLE {table_name} (\n' + ',\n'.join([f'    {d}' for d in col_defs]) + ' );'
+            ddl = f'CREATE TABLE {_q(table_name)} (\n' + ',\n'.join([f'    {d}' for d in col_defs]) + ' );'
             schema[db_id].append(ddl)
 
     return schema
