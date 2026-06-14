@@ -37,9 +37,24 @@ def get_spider_x_y_set(data_set: Dataset, tokenizer, max_tokens) -> list[dict]:
         db_tables = spider_schema_ddls_and_candidates[q['db_id']]
         schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['query'])
+
+        # Schema-Lookup: {table_name_lower: set(col_name_lower)} aus den echten DB-Spalten
+        real_schema = {}
+        for schema_table in db_tables:
+            t = schema_table['candidates']['table'].lower()
+            real_schema[t] = {c.lower() for c in schema_table['candidates']['columns']}
+
+        # Gold-Schema gegen echtes Schema filtern: nur Tabellen/Spalten behalten die wirklich existieren
+        filtered_gold = {}
         for table, columns in gold_schema.items():
-            # All parsed SQLs that don't have any columns in the gold schema because of SELECT * get the first column
-            # of the table
+            if table.lower() not in real_schema:
+                continue
+            valid_cols = [c for c in columns if c.lower() in real_schema[table.lower()]]
+            filtered_gold[table] = valid_cols
+        gold_schema = filtered_gold
+
+        for table, columns in gold_schema.items():
+            # SELECT * erzeugt leere Column-Liste — erste Spalte der Tabelle eintragen
             if len(columns) == 0:
                 for schema_table in db_tables:
                     schema_table_name = schema_table['candidates']['table']
@@ -70,27 +85,26 @@ def generate_spider_ddl(tables_json: list) -> dict[str, list]:
 
         for table_idx, table_name in enumerate(tables):
             cols = columns_by_table[table_idx]
-            pk_col_set = {col_name for col_idx, col_name, _ in cols if col_idx in primary_keys}
-
-            def _q(name):
-                """Nur quoten wenn Name Sonderzeichen oder Leerzeichen enthält."""
-                if re.search(r'[^A-Za-z0-9_]', name):
-                    return f'`{name}`'
-                return name
+            pk_col_set = {col_name.replace(' ', '_') for col_idx, col_name, _ in cols if col_idx in primary_keys}
 
             col_defs = []
             for _, col_name, sql_type in cols:
+                # Leerzeichen in Spaltennamen durch Unterstriche ersetzen,
+                # damit « table column » Marker als zwei Tokens funktionieren
+                col_name = col_name.replace(' ', '_')
                 pk_suffix = ' PRIMARY KEY' if col_name in pk_col_set else ''
-                col_defs.append(f'{_q(col_name)} {sql_type}{pk_suffix}')
+                col_defs.append(f'    {col_name} {sql_type}{pk_suffix}')
 
+            fk_defs = []
             for fk_from, fk_to in db['foreign_keys']:
                 if db['column_names_original'][fk_from][0] == table_idx:
-                    fk_from_col = db['column_names_original'][fk_from][1]
+                    fk_from_col = db['column_names_original'][fk_from][1].replace(' ', '_')
                     fk_to_table = db['table_names_original'][db['column_names_original'][fk_to][0]]
-                    fk_to_col = db['column_names_original'][fk_to][1]
-                    col_defs.append(f'FOREIGN KEY({_q(fk_from_col)}) REFERENCES {_q(fk_to_table)}({_q(fk_to_col)})')
+                    fk_to_col = db['column_names_original'][fk_to][1].replace(' ', '_')
+                    fk_defs.append(f'    FOREIGN KEY({fk_from_col})\n      REFERENCES {fk_to_table}({fk_to_col})')
 
-            ddl = f'CREATE TABLE {_q(table_name)} (\n' + ',\n'.join([f'    {d}' for d in col_defs]) + ' );'
+            all_defs = col_defs + fk_defs
+            ddl = f'CREATE TABLE {table_name} (\n' + ',\n'.join(all_defs) + ' );'
             schema[db_id].append(ddl)
 
     return schema

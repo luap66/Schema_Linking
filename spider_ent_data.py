@@ -50,6 +50,20 @@ def get_spider_ent_data(tokenizer, max_tokens):
         db_ddls_and_candidates = schema_with_parsed_candidates.get(q['data_asset'])
         schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, tokenizer)
         gold_schema = parse_orig_sql(q['original_SQL'])
+
+        # Gold-Schema gegen echtes Schema filtern
+        real_schema = {}
+        for schema_table in db_ddls_and_candidates:
+            t = schema_table['candidates']['table'].lower()
+            real_schema[t] = {c.lower() for c in schema_table['candidates']['columns']}
+        filtered_gold = {}
+        for table, columns in gold_schema.items():
+            if table.lower() not in real_schema:
+                continue
+            valid_cols = [c for c in columns if c.lower() in real_schema[table.lower()]]
+            filtered_gold[table] = valid_cols
+        gold_schema = filtered_gold
+
         for table, columns in gold_schema.items():
             # SELECT * erzeugt leere Column-Liste — erste Spalte der Tabelle eintragen
             if len(columns) == 0:

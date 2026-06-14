@@ -1,119 +1,177 @@
 import re
 from collections import defaultdict
 
-import sqlglot
-import sqlglot.expressions as exp
-import torch
-import torch.nn as nn
+from mo_sql_parsing import parse as mo_parse
 
 
 def parse_ddl(ddl: str) -> dict:
     """Creates a list of strings in the form of '<table> <column>' for a given table schema string"""
     cleaned = re.sub(r'/\*.*?\*/', '', ddl)
-    try:
-        fixed = re.sub(r'(`\w+`\s+\w+(?:\(\d+\))?)\)', r'\1', cleaned)
-        tree = sqlglot.parse_one(fixed, dialect="mysql")
-        table_name = tree.find(exp.Table).name if tree.find(exp.Table) else None
-        columns = [col.name for col in tree.find_all(exp.ColumnDef)]
-    except sqlglot.errors.ParseError:
-        # Fallback: extract table name and column definitions line by line
-        # Unterstützt sowohl Format mit Backticks als auch ohne
-        table_match = re.search(r'CREATE TABLE\s+`?(\w+)`?', cleaned)
-        table_name = table_match.group(1) if table_match else None
-        # Match column definitions: optional backtick, name, optional backtick, then type word
-        # Excludes PRIMARY KEY, FOREIGN KEY lines
-        columns = re.findall(r'^\s*`?(\w+)`?\s+(?:NUMBER|TEXT|INTEGER|REAL|BLOB)\b', cleaned, re.MULTILINE | re.IGNORECASE)
+    # Regex-basiertes Parsing: robuster als sqlglot bei Sonderzeichen in Spaltennamen
+    table_match = re.search(r'CREATE TABLE\s+`?(\S+?)`?\s*\(', cleaned)
+    table_name = table_match.group(1) if table_match else None
+    # Spaltenname = alles vor dem Typ-Keyword, erlaubt Sonderzeichen wie %, ()
+    # Excludes FOREIGN KEY, PRIMARY KEY constraint lines
+    columns = re.findall(r'^\s+(?!FOREIGN\s+KEY|PRIMARY\s+KEY)(\S+)\s+(?:NUMBER|TEXT|INTEGER|REAL|BLOB)\b',
+                         cleaned, re.MULTILINE | re.IGNORECASE)
     return {"table": table_name, "columns": columns}
 
 
+# ---------------------------------------------------------------------------
+# SQL-Parsing mit mo-sql-parsing (wie im ExSL-Paper)
+# ---------------------------------------------------------------------------
+
+# JOIN-Typen die mo-sql-parsing als Keys verwendet
+_JOIN_KEYS = ('join', 'left join', 'right join', 'inner join',
+              'cross join', 'left outer join', 'full join', 'full outer join')
+
+
 def parse_orig_sql(sql) -> dict:
-    tree = sqlglot.parse_one(sql)
-
-    result = defaultdict(set)
-
-    def local_tables_of_select(select_node):
-        """Tabellen direkt im FROM/JOIN dieses SELECTs, ohne in Subqueries abzusteigen."""
-        def collect(node):
-            if isinstance(node, exp.Subquery):
-                return []
-            tables = []
-            if isinstance(node, exp.Table):
-                tables.append(node)
-            for child in node.args.values():
-                if child is None:
-                    continue
-                if isinstance(child, list):
-                    for item in child:
-                        if isinstance(item, exp.Expression):
-                            tables.extend(collect(item))
-                elif isinstance(child, exp.Expression):
-                    tables.extend(collect(child))
-            return tables
-
-        local = []
-        from_clause = select_node.args.get('from_') or select_node.args.get('from')
-        if from_clause:
-            local.extend(collect(from_clause))
-        for join in (select_node.args.get('joins') or []):
-            local.extend(collect(join))
-        return local
-
-    # SELECT * behandeln: Tabellen erfassen, auch wenn keine expliziten Spalten genannt werden
-    for star in tree.find_all(exp.Star):
-        parent_select = star.find_ancestor(exp.Select)
-        if parent_select is None:
-            continue
-        local_tables = local_tables_of_select(parent_select)
-        for t in local_tables:
-            table_name = t.name.lower()
-            # Tabelle ins Result aufnehmen (leere Menge = alle Spalten via *)
-            result[table_name]  # defaultdict erzeugt leeres set
-
-    # Alle genutzten Columns sammeln
-    for col in tree.find_all(exp.Column):
-        # Spider SQL nutzt doppelte Anführungszeichen für String-Werte (z.B. WHERE col = "USA").
-        # sqlglot parst diese als quoted Identifier statt als Literal — überspringen.
-        if col.this.quoted:
-            continue
-        table_alias = col.table.lower()
-        col_name = col.name.lower()
-        if not col_name:
-            continue
-
-        parent_select = col.find_ancestor(exp.Select)
-
-        if table_alias:
-            # Alias-Map nur aus dem lokalen Scope dieses SELECTs bauen. Denn in einem SQL können mehrere SELECTs enthalten sein, bspw. bei Intersect-Statements.
-            if parent_select is not None:
-                local_tables = local_tables_of_select(parent_select)
-                local_alias_map = {t.alias.lower(): t.name for t in local_tables if t.alias}
-            else:
-                local_alias_map = {}
-            table_name = local_alias_map.get(table_alias, table_alias).lower()
-            result[table_name].add(col_name)
-        else:
-            # Lokalen Scope: naechster umgebender SELECT
-            if parent_select is None:
+    try:
+        tree = mo_parse(sql)
+    except Exception:
+        # Fallback für syntaktisch ungültige SQLs (z.B. ORDER BY ... INTERSECT)
+        # Teile am Set-Operator und parse jeden Teil einzeln
+        result = defaultdict(set)
+        for part in re.split(r'\b(UNION ALL|UNION|INTERSECT|EXCEPT)\b', sql, flags=re.IGNORECASE):
+            part = part.strip()
+            if not part or part.upper() in ('UNION', 'UNION ALL', 'INTERSECT', 'EXCEPT'):
                 continue
-            local_tables = local_tables_of_select(parent_select)
-            if len(local_tables) == 1:
-                result[local_tables[0].name.lower()].add(col_name)
-
+            try:
+                sub_tree = mo_parse(part)
+                _walk_query(sub_tree, result)
+            except Exception:
+                continue
+        return {k: list(v) for k, v in result.items()}
+    result = defaultdict(set)
+    _walk_query(tree, result)
     return {k: list(v) for k, v in result.items()}
 
 
-def has_join_and_alias(sql: str) -> dict:
-    tree = sqlglot.parse_one(sql)
+def _walk_query(node, result):
+    """Verarbeitet Set-Operationen (UNION/INTERSECT/EXCEPT) oder einzelne SELECTs."""
+    if not isinstance(node, dict):
+        return
+    for op in ('union', 'union_all', 'intersect', 'except'):
+        if op in node:
+            items = node[op] if isinstance(node[op], list) else [node[op]]
+            for item in items:
+                _walk_query(item, result)
+            return
+    if 'select' in node or 'select_distinct' in node:
+        _handle_select(node, result)
 
-    joins = list(tree.find_all(exp.Join))
-    tables_with_alias = [t for t in tree.find_all(exp.Table) if t.alias]
 
-    return {
-        "has_join": len(joins) > 0,
-        "has_alias": len(tables_with_alias) > 0,
-        "aliases": {t.alias: t.name for t in tables_with_alias},
-        "result": len(joins) > 0 and len(tables_with_alias) > 0
-    }
+def _handle_select(node, result):
+    """Extrahiert Tabellen und Spalten aus einem einzelnen SELECT."""
+    alias_map = {}
+    tables = []
+    _extract_tables(node.get('from'), alias_map, tables, result)
+
+    # SELECT * → Tabelle ohne Spalten erfassen
+    sel = node.get('select') or node.get('select_distinct')
+    if _has_star(sel):
+        for t in tables:
+            result[t.lower()]
+
+    # Spaltenreferenzen aus allen Klauseln sammeln
+    refs = []
+    for key in ('select', 'select_distinct', 'where', 'groupby', 'orderby', 'having'):
+        _collect_refs(node.get(key), refs, result)
+    # ON-Klauseln stecken in der FROM-Struktur
+    _collect_on_refs(node.get('from'), refs, result)
+
+    # Alias-Auflösung
+    for ref in refs:
+        if '.' in ref:
+            alias, col = ref.split('.', 1)
+            tbl = alias_map.get(alias, alias).lower()
+            result[tbl].add(col.lower())
+        elif len(tables) == 1:
+            result[tables[0].lower()].add(ref.lower())
+
+
+def _has_star(sel):
+    if isinstance(sel, dict) and 'all_columns' in sel:
+        return True
+    if isinstance(sel, list):
+        return any(isinstance(s, dict) and 'all_columns' in s for s in sel)
+    return False
+
+
+def _extract_tables(clause, alias_map, tables, result):
+    """Extrahiert Tabellennamen und Aliase aus FROM/JOIN-Klauseln."""
+    if clause is None:
+        return
+    if isinstance(clause, str):
+        tables.append(clause)
+    elif isinstance(clause, dict):
+        # Direkte Tabellenreferenz: {"value": "table_name", "name": "alias"}
+        if 'value' in clause:
+            val = clause['value']
+            if isinstance(val, str):
+                tables.append(val)
+                if 'name' in clause:
+                    alias_map[clause['name']] = val
+            elif isinstance(val, dict):
+                _walk_query(val, result)  # Subquery in FROM
+        # JOIN-Klauseln
+        for jk in _JOIN_KEYS:
+            if jk in clause:
+                j = clause[jk]
+                if isinstance(j, str):
+                    tables.append(j)
+                elif isinstance(j, dict):
+                    if 'value' in j and isinstance(j['value'], str):
+                        tables.append(j['value'])
+                        if 'name' in j:
+                            alias_map[j['name']] = j['value']
+                    elif 'value' in j and isinstance(j['value'], dict):
+                        _walk_query(j['value'], result)
+    elif isinstance(clause, list):
+        for item in clause:
+            _extract_tables(item, alias_map, tables, result)
+
+
+def _collect_on_refs(clause, refs, result):
+    """Sammelt Spaltenreferenzen aus ON-Klauseln innerhalb von FROM."""
+    if clause is None:
+        return
+    if isinstance(clause, dict):
+        if 'on' in clause:
+            _collect_refs(clause['on'], refs, result)
+        for val in clause.values():
+            if isinstance(val, (dict, list)):
+                _collect_on_refs(val, refs, result)
+    elif isinstance(clause, list):
+        for item in clause:
+            _collect_on_refs(item, refs, result)
+
+
+def _collect_refs(node, refs, result):
+    """Sammelt rekursiv alle Spaltenreferenz-Strings aus dem Parse-Baum."""
+    if node is None:
+        return
+    if isinstance(node, str):
+        if node != '*':
+            refs.append(node)
+    elif isinstance(node, (int, float, bool)):
+        return
+    elif isinstance(node, dict):
+        if 'literal' in node:
+            return  # Single-Quoted String-Literal
+        if 'select' in node or 'select_distinct' in node:
+            _walk_query(node, result)  # Subquery
+            return
+        if 'all_columns' in node:
+            return
+        for key, val in node.items():
+            if key in ('name', 'sort'):  # Alias (AS ...) und Sortierrichtung überspringen
+                continue
+            _collect_refs(val, refs, result)
+    elif isinstance(node, list):
+        for item in node:
+            _collect_refs(item, refs, result)
 
 
 def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, tokenizer) -> list:
