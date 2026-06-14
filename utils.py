@@ -68,12 +68,6 @@ def _handle_select(node, result):
     tables = []
     _extract_tables(node.get('from'), alias_map, tables, result)
 
-    # SELECT * → Tabelle ohne Spalten erfassen
-    sel = node.get('select') or node.get('select_distinct')
-    if _has_star(sel):
-        for t in tables:
-            result[t.lower()]
-
     # Spaltenreferenzen aus allen Klauseln sammeln
     refs = []
     for key in ('select', 'select_distinct', 'where', 'groupby', 'orderby', 'having'):
@@ -89,6 +83,13 @@ def _handle_select(node, result):
             result[tbl].add(col.lower())
         elif len(tables) == 1:
             result[tables[0].lower()].add(ref.lower())
+
+    # Tabellen die im FROM stehen aber keine Spalten zugeordnet bekamen
+    # (z.B. SELECT count(*) FROM t, oder SELECT * FROM t)
+    # → mit leerer Spaltenliste erfassen, damit spider_data.py die erste Spalte eintragen kann
+    for t in tables:
+        if t.lower() not in result:
+            result[t.lower()]
 
 
 def _has_star(sel):
@@ -106,6 +107,10 @@ def _extract_tables(clause, alias_map, tables, result):
     if isinstance(clause, str):
         tables.append(clause)
     elif isinstance(clause, dict):
+        # Subquery oder Set-Operation direkt in FROM (ohne {"value": ...} Wrapper)
+        if any(k in clause for k in ('select', 'select_distinct', 'union', 'union_all', 'intersect', 'except')):
+            _walk_query(clause, result)
+            return
         # Direkte Tabellenreferenz: {"value": "table_name", "name": "alias"}
         if 'value' in clause:
             val = clause['value']
@@ -134,10 +139,14 @@ def _extract_tables(clause, alias_map, tables, result):
 
 
 def _collect_on_refs(clause, refs, result):
-    """Sammelt Spaltenreferenzen aus ON-Klauseln innerhalb von FROM."""
+    """Sammelt Spaltenreferenzen aus ON-Klauseln innerhalb von FROM.
+    Stoppt an Subquery-/Set-Op-Grenzen, da diese ihren eigenen Scope haben."""
     if clause is None:
         return
     if isinstance(clause, dict):
+        # Nicht in Subqueries oder Set-Operationen absteigen
+        if any(k in clause for k in ('select', 'select_distinct', 'union', 'union_all', 'intersect', 'except')):
+            return
         if 'on' in clause:
             _collect_refs(clause['on'], refs, result)
         for val in clause.values():
