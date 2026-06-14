@@ -68,20 +68,21 @@ def generate_spider_ddl(tables_json: list) -> dict[str, list]:
 
         for table_idx, table_name in enumerate(tables):
             cols = columns_by_table[table_idx]
-            col_defs = [f'`{col_name}` {sql_type}' for _, col_name, sql_type in cols]
+            pk_col_set = {col_name for col_idx, col_name, _ in cols if col_idx in primary_keys}
 
-            pk_cols = [col_name for col_idx, col_name, _ in cols if col_idx in primary_keys]
-            if pk_cols:
-                col_defs.append(f'PRIMARY KEY ({", ".join([f"`{c}`" for c in pk_cols])})')
+            col_defs = []
+            for _, col_name, sql_type in cols:
+                pk_suffix = ' PRIMARY KEY' if col_name in pk_col_set else ''
+                col_defs.append(f'{col_name} {sql_type}{pk_suffix}')
 
             for fk_from, fk_to in db['foreign_keys']:
                 if db['column_names_original'][fk_from][0] == table_idx:
                     fk_from_col = db['column_names_original'][fk_from][1]
                     fk_to_table = db['table_names_original'][db['column_names_original'][fk_to][0]]
                     fk_to_col = db['column_names_original'][fk_to][1]
-                    col_defs.append(f'FOREIGN KEY (`{fk_from_col}`) REFERENCES `{fk_to_table}` (`{fk_to_col}`)')
+                    col_defs.append(f'FOREIGN KEY({fk_from_col}) REFERENCES {fk_to_table}({fk_to_col})')
 
-            ddl = f'CREATE TABLE `{table_name}` (\n' + ',\n'.join([f'  {d}' for d in col_defs]) + '\n);'
+            ddl = f'CREATE TABLE {table_name} (\n' + ',\n'.join([f'    {d}' for d in col_defs]) + ' );'
             schema[db_id].append(ddl)
 
     return schema
