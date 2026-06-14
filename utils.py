@@ -17,10 +17,12 @@ def parse_ddl(ddl: str) -> dict:
         columns = [col.name for col in tree.find_all(exp.ColumnDef)]
     except sqlglot.errors.ParseError:
         # Fallback: extract table name and column definitions line by line
-        table_match = re.search(r'CREATE TABLE `(\w+)`', cleaned)
+        # Unterstützt sowohl Format mit Backticks als auch ohne
+        table_match = re.search(r'CREATE TABLE\s+`?(\w+)`?', cleaned)
         table_name = table_match.group(1) if table_match else None
-        # Match lines starting with a backtick column name followed by a type word — excludes PRIMARY KEY, FOREIGN KEY etc.
-        columns = re.findall(r'^\s*`(\w+)`\s+\w', cleaned, re.MULTILINE)
+        # Match column definitions: optional backtick, name, optional backtick, then type word
+        # Excludes PRIMARY KEY, FOREIGN KEY lines
+        columns = re.findall(r'^\s*`?(\w+)`?\s+(?:NUMBER|TEXT|INTEGER|REAL|BLOB)\b', cleaned, re.MULTILINE | re.IGNORECASE)
     return {"table": table_name, "columns": columns}
 
 
@@ -114,7 +116,7 @@ def has_join_and_alias(sql: str) -> dict:
     }
 
 
-def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, tokenizer) -> list:
+def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int) -> list:
     """Builds schema linker inputs for a single question. Splits the database schema into multiple
     chunks if the full schema exceeds the context window size.
     Returns a list of prompt strings, each containing a subset of tables and their candidate columns."""
@@ -133,7 +135,7 @@ def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, 
             current_column_input = current_column_input + "\n« " + table_name + " " + column + "»"
 
         new_collected = collected_ddl_input + table_ddl + question_text + collected_columns_input + current_column_input
-        token_count = len(tokenizer.encode(new_collected))
+        token_count = len(new_collected)
         if token_count >= context_window:
             # Append old strings to the schema linker inputs, because adding another table would surpass the context window size.
             schema_input_in_context_window_size = collected_ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + collected_columns_input
