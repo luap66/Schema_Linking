@@ -5,16 +5,26 @@ from collections import defaultdict
 from mo_sql_parsing import parse as mo_parse
 
 
+# Zeilen ohne Spaltendefinition: Tabellenende, Constraints, FK-Fortsetzung, Leerzeilen
+_NON_COLUMN_LINE = re.compile(r'^\s*(?:\)|PRIMARY\s+KEY|FOREIGN\s+KEY|REFERENCES|UNIQUE|CONSTRAINT|$)', re.IGNORECASE)
+# Spaltenname = Backtick-Name (darf Leerzeichen enthalten) oder erstes Wort der Zeile (darf %, () enthalten)
+_COLUMN_NAME = re.compile(r'^\s*(?:`([^`]+)`|([^\s,]+))')
+
+
 def parse_ddl(ddl: str) -> dict:
     """Creates a list of strings in the form of '<table> <column>' for a given table schema string"""
-    cleaned = re.sub(r'/\*.*?\*/', '', ddl)
-    # Regex-basiertes Parsing: robuster als sqlglot bei Sonderzeichen in Spaltennamen
+    cleaned = re.sub(r'/\*.*?\*/', '', ddl, flags=re.DOTALL)
     table_match = re.search(r'CREATE TABLE\s+`?(\S+?)`?\s*\(', cleaned)
     table_name = table_match.group(1) if table_match else None
-    # Spaltenname = alles vor dem Typ-Keyword, erlaubt Sonderzeichen wie %, ()
-    # Excludes FOREIGN KEY, PRIMARY KEY constraint lines
-    columns = re.findall(r'^\s+(?!FOREIGN\s+KEY|PRIMARY\s+KEY)(\S+)\s+(?:NUMBER|TEXT|INTEGER|REAL|BLOB)\b',
-                         cleaned, re.MULTILINE | re.IGNORECASE)
+    # Eine Spalte pro Zeile, unabhängig von Einrückung (Spider: 4 Spaces, Spider-Ent: keine) und Typ
+    # (Spider-Ent nutzt u.a. VARCHAR, DATETIME, BOOLEAN und hat Spalten ohne Typ)
+    columns = []
+    for line in cleaned.split('\n')[1:]:
+        if _NON_COLUMN_LINE.match(line):
+            continue
+        match = _COLUMN_NAME.match(line)
+        if match:
+            columns.append(match.group(1) or match.group(2))
     return {"table": table_name, "columns": columns}
 
 
@@ -196,11 +206,19 @@ def count_tokens(text: str, tokenizer=None) -> int:
     return len(tokenizer.encode(text))
 
 
-def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, db_id, tokenizer=None) -> list:
+def build_schema_linker_prompt(ddl_input: str, question_text: str, columns_input: str) -> str:
+    """Builds the prompt string exactly as it is passed to the model."""
+    return ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + columns_input
+
+
+def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, db_id, tokenizer=None,
+                               overflow_stats: dict = None) -> list:
     """Builds schema linker inputs for a single question. Splits the database schema into multiple
     chunks if the full schema exceeds the context window size.
     Without a tokenizer the token count is estimated from the character count (see CHARS_PER_TOKEN_ESTIMATE).
     Without a context window the whole schema ends up in a single chunk.
+    If overflow_stats is given, every split appends the number of tokens the next table would have exceeded
+    the context window by to overflow_stats[db_id].
     Returns a list of prompt strings, each containing a subset of tables and their candidate columns."""
     if tokenizer is not None and context_window is None:
         raise ValueError("context_window is required when a tokenizer is given")
@@ -218,25 +236,31 @@ def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, 
         for column in column_list:
             current_column_input = current_column_input + "\n« " + table_name + " " + column + "»"
 
-        new_collected = collected_ddl_input + table_ddl + question_text + collected_columns_input + current_column_input
-        collected_token_count = count_tokens(new_collected, tokenizer)
-        if collected_token_count >= context_window:
+        new_ddl_input = collected_ddl_input + "\n" + table_ddl
+        new_columns_input = collected_columns_input + current_column_input
+        exceeded_by = 0
+        if context_window is not None:
+            # Count the complete prompt incl. question template, otherwise chunks end up a few tokens too long and get truncated
+            new_prompt = build_schema_linker_prompt(new_ddl_input, question_text, new_columns_input)
+            exceeded_by = count_tokens(new_prompt, tokenizer) - context_window
+
+        # A table that does not even fit into an empty chunk gets its own chunk instead of producing an empty one
+        if exceeded_by > 0 and collected_ddl_input:
             # Append old strings to the schema linker inputs, because adding another table would surpass the context window size.
-            schema_input_in_context_window_size = collected_ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + collected_columns_input
-            schema_linker_inputs.append(schema_input_in_context_window_size)
+            schema_linker_inputs.append(build_schema_linker_prompt(collected_ddl_input, question_text, collected_columns_input))
             # Reset the schema_input variables to the values of this table, so the table can be included in the next schema linker inputs.
             collected_ddl_input = table_ddl
             collected_columns_input = current_column_input
-            print(f"Could not fit all tables of db {db_id} inside the context window of {context_window}.")
+            if overflow_stats is not None:
+                overflow_stats.setdefault(db_id, []).append(exceeded_by)
+            print(f"Could not fit all tables of db {db_id} inside the context window of {context_window} (exceeded by {exceeded_by} tokens).")
         else:
             # The schema input is still small enough, so the schema of the current table can be concatenated to the schema_input item
-            collected_ddl_input = collected_ddl_input + "\n" + table_ddl
-            collected_columns_input = collected_columns_input + current_column_input
+            collected_ddl_input = new_ddl_input
+            collected_columns_input = new_columns_input
 
     # Append the last remaining block
     if collected_ddl_input:
-        schema_linker_inputs.append(
-            collected_ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + collected_columns_input
-        )
+        schema_linker_inputs.append(build_schema_linker_prompt(collected_ddl_input, question_text, collected_columns_input))
 
     return schema_linker_inputs
