@@ -43,12 +43,12 @@ def get_gold_tables_ddls(item: dict) -> list:
     return tables
 
 
-def get_spider_ent_data(tokenizer, max_tokens):
+def get_spider_ent_data(tokenizer=None, max_tokens=None):
     schema_linker_inputs = []
 
     for q in spider_ent:
         db_ddls_and_candidates = schema_with_parsed_candidates.get(q['data_asset'])
-        schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, tokenizer)
+        schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, q['data_asset'], tokenizer)
         gold_schema = parse_orig_sql(q['original_SQL'])
 
         # Gold-Schema gegen echtes Schema filtern

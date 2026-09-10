@@ -1,3 +1,4 @@
+import math
 import re
 from collections import defaultdict
 
@@ -183,10 +184,26 @@ def _collect_refs(node, refs, result):
             _collect_refs(item, refs, result)
 
 
-def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, tokenizer) -> list:
+# Gemessen mit dem deepseek-coder Tokenizer: Spider ~2.9 Zeichen/Token (Median), Spider-Ent ~2.2 (Minimum 2.16).
+# Bewusst niedriger gewählt, damit ein geschätzter Chunk nie mehr echte Tokens hat als das Context Window.
+CHARS_PER_TOKEN_ESTIMATE = 2.0
+
+
+def count_tokens(text: str, tokenizer=None) -> int:
+    """Counts the tokens of a text with the tokenizer, or estimates them from the character count if no tokenizer is given."""
+    if tokenizer is None:
+        return math.ceil(len(text) / CHARS_PER_TOKEN_ESTIMATE)
+    return len(tokenizer.encode(text))
+
+
+def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, db_id, tokenizer=None) -> list:
     """Builds schema linker inputs for a single question. Splits the database schema into multiple
     chunks if the full schema exceeds the context window size.
+    Without a tokenizer the token count is estimated from the character count (see CHARS_PER_TOKEN_ESTIMATE).
+    Without a context window the whole schema ends up in a single chunk.
     Returns a list of prompt strings, each containing a subset of tables and their candidate columns."""
+    if tokenizer is not None and context_window is None:
+        raise ValueError("context_window is required when a tokenizer is given")
     schema_linker_inputs = []
     collected_ddl_input = ""
     collected_columns_input = ""
@@ -202,14 +219,15 @@ def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, 
             current_column_input = current_column_input + "\n« " + table_name + " " + column + "»"
 
         new_collected = collected_ddl_input + table_ddl + question_text + collected_columns_input + current_column_input
-        token_count = len(tokenizer.encode(new_collected))
-        if token_count >= context_window:
+        collected_token_count = count_tokens(new_collected, tokenizer)
+        if collected_token_count >= context_window:
             # Append old strings to the schema linker inputs, because adding another table would surpass the context window size.
             schema_input_in_context_window_size = collected_ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + collected_columns_input
             schema_linker_inputs.append(schema_input_in_context_window_size)
             # Reset the schema_input variables to the values of this table, so the table can be included in the next schema linker inputs.
             collected_ddl_input = table_ddl
             collected_columns_input = current_column_input
+            print(f"Could not fit all tables of db {db_id} inside the context window of {context_window}.")
         else:
             # The schema input is still small enough, so the schema of the current table can be concatenated to the schema_input item
             collected_ddl_input = collected_ddl_input + "\n" + table_ddl

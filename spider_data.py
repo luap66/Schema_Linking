@@ -16,13 +16,13 @@ spider_train = load_dataset("xlangai/spider", split="train")
 spider_val = load_dataset("xlangai/spider", split="validation")
 
 
-def get_spider_train(tokenizer, max_tokens) -> list[dict]:
+def get_spider_train(tokenizer=None, max_tokens=None) -> list[dict]:
     return get_spider_x_y_set(spider_train, tokenizer, max_tokens)
 
-def get_spider_val(tokenizer, max_tokens) -> list[dict]:
+def get_spider_val(tokenizer=None, max_tokens=None) -> list[dict]:
     return get_spider_x_y_set(spider_val, tokenizer, max_tokens)
 
-def get_spider_x_y_set(data_set: Dataset, tokenizer, max_tokens) -> list[dict]:
+def get_spider_x_y_set(data_set: Dataset, tokenizer=None, max_tokens=None) -> list[dict]:
     schema_linker_inputs = []
     spider_schema_ddls = generate_spider_ddl(spider_tables)
     spider_schema_ddls_and_candidates = {}
@@ -35,7 +35,7 @@ def get_spider_x_y_set(data_set: Dataset, tokenizer, max_tokens) -> list[dict]:
 
     for q in data_set:
         db_tables = spider_schema_ddls_and_candidates[q['db_id']]
-        schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, tokenizer)
+        schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, q['db_id'], tokenizer)
         gold_schema = parse_orig_sql(q['query'])
 
         # Schema-Lookup: {table_name_lower: set(col_name_lower)} aus den echten DB-Spalten
