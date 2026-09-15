@@ -29,7 +29,7 @@ def get_spider_x_y_set(data_set: Dataset, tokenizer=None, max_tokens=None, overf
     for q in data_set:
         db_tables = spider_schema_ddls_and_candidates[q['db_id']]
         schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, q['db_id'], tokenizer, overflow_stats)
-        gold_schema = get_gold_schema(q['db_id'], db_tables)
+        gold_schema = get_gold_schema(q['query'], db_tables)
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema, "sql": q['query']})
     return schema_linker_inputs
 
