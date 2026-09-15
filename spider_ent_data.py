@@ -49,28 +49,7 @@ def get_spider_ent_data(tokenizer=None, max_tokens=None, overflow_stats: dict = 
     for q in spider_ent:
         db_ddls_and_candidates = schema_with_parsed_candidates.get(q['data_asset'])
         schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, q['data_asset'], tokenizer, overflow_stats)
-        gold_schema = parse_orig_sql(q['original_SQL'])
-
-        # Gold-Schema gegen echtes Schema filtern
-        real_schema = {}
-        for schema_table in db_ddls_and_candidates:
-            t = schema_table['candidates']['table'].lower()
-            real_schema[t] = {c.lower() for c in schema_table['candidates']['columns']}
-        filtered_gold = {}
-        for table, columns in gold_schema.items():
-            if table.lower() not in real_schema:
-                continue
-            valid_cols = [c for c in columns if c.lower() in real_schema[table.lower()]]
-            filtered_gold[table] = valid_cols
-        gold_schema = filtered_gold
-
-        for table, columns in gold_schema.items():
-            # SELECT * erzeugt leere Column-Liste — erste Spalte der Tabelle eintragen
-            if len(columns) == 0:
-                for schema_table in db_ddls_and_candidates:
-                    schema_table_name = schema_table['candidates']['table']
-                    if schema_table_name.lower() == table.lower():
-                        columns.append(schema_table['candidates']['columns'][0])
+        gold_schema = get_ent_gold_schema_neu(q)
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
     return schema_linker_inputs
 
