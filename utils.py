@@ -263,3 +263,30 @@ def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, 
         schema_linker_inputs.append(build_schema_linker_prompt(collected_ddl_input, question_text, collected_columns_input))
 
     return schema_linker_inputs
+
+def get_gold_schema(query:str, db_tables):
+    gold_schema = parse_orig_sql(query)
+
+    # Schema-Lookup: {table_name_lower: set(col_name_lower)} aus den echten DB-Spalten
+    real_schema = {}
+    for schema_table in db_tables:
+        t = schema_table['candidates']['table'].lower()
+        real_schema[t] = {c.lower() for c in schema_table['candidates']['columns']}
+
+    # Gold-Schema gegen echtes Schema filtern: nur Tabellen/Spalten behalten die wirklich existieren
+    filtered_gold = {}
+    for table, columns in gold_schema.items():
+        if table.lower() not in real_schema:
+            continue
+        valid_cols = [c for c in columns if c.lower() in real_schema[table.lower()]]
+        filtered_gold[table] = valid_cols
+    gold_schema = filtered_gold
+
+    for table, columns in gold_schema.items():
+        # SELECT * erzeugt leere Column-Liste — erste Spalte der Tabelle eintragen
+        if len(columns) == 0:
+            for schema_table in db_tables:
+                schema_table_name = schema_table['candidates']['table']
+                if schema_table_name.lower() == table.lower():
+                    columns.append(schema_table['candidates']['columns'][0])
+    return gold_schema

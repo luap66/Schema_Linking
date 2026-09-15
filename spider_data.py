@@ -2,7 +2,7 @@ import json
 import re
 
 from datasets import load_dataset, Dataset
-from utils import create_schema_linker_input, parse_orig_sql, parse_ddl
+from utils import create_schema_linker_input, parse_orig_sql, parse_ddl, get_gold_schema
 
 from dotenv import load_dotenv
 
@@ -24,6 +24,17 @@ def get_spider_val(tokenizer=None, max_tokens=None, overflow_stats: dict = None)
 
 def get_spider_x_y_set(data_set: Dataset, tokenizer=None, max_tokens=None, overflow_stats: dict = None) -> list[dict]:
     schema_linker_inputs = []
+    spider_schema_ddls_and_candidates = get_spider_schema_ddl_and_candidates()
+
+    for q in data_set:
+        db_tables = spider_schema_ddls_and_candidates[q['db_id']]
+        schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, q['db_id'], tokenizer, overflow_stats)
+        gold_schema = get_gold_schema(q['db_id'], db_tables)
+        schema_linker_inputs.append(schema_linker_input)
+        schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema, "sql": q['query']})
+    return schema_linker_inputs
+
+def get_spider_schema_ddl_and_candidates():
     spider_schema_ddls = generate_spider_ddl(spider_tables)
     spider_schema_ddls_and_candidates = {}
     for db, ddls in spider_schema_ddls.items():
@@ -32,36 +43,7 @@ def get_spider_x_y_set(data_set: Dataset, tokenizer=None, max_tokens=None, overf
             parsed_ddl = parse_ddl(ddl)
             db_table_info.append({"ddl": ddl, "candidates": parsed_ddl})
         spider_schema_ddls_and_candidates[db] = db_table_info
-
-    for q in data_set:
-        db_tables = spider_schema_ddls_and_candidates[q['db_id']]
-        schema_linker_input = create_schema_linker_input(db_tables, q['question'], max_tokens, q['db_id'], tokenizer, overflow_stats)
-        gold_schema = parse_orig_sql(q['query'])
-
-        # Schema-Lookup: {table_name_lower: set(col_name_lower)} aus den echten DB-Spalten
-        real_schema = {}
-        for schema_table in db_tables:
-            t = schema_table['candidates']['table'].lower()
-            real_schema[t] = {c.lower() for c in schema_table['candidates']['columns']}
-
-        # Gold-Schema gegen echtes Schema filtern: nur Tabellen/Spalten behalten die wirklich existieren
-        filtered_gold = {}
-        for table, columns in gold_schema.items():
-            if table.lower() not in real_schema:
-                continue
-            valid_cols = [c for c in columns if c.lower() in real_schema[table.lower()]]
-            filtered_gold[table] = valid_cols
-        gold_schema = filtered_gold
-
-        for table, columns in gold_schema.items():
-            # SELECT * erzeugt leere Column-Liste — erste Spalte der Tabelle eintragen
-            if len(columns) == 0:
-                for schema_table in db_tables:
-                    schema_table_name = schema_table['candidates']['table']
-                    if schema_table_name.lower() == table.lower():
-                        columns.append(schema_table['candidates']['columns'][0])
-        schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema, "sql": q['query']})
-    return schema_linker_inputs
+    return spider_schema_ddls_and_candidates
 
 def generate_spider_ddl(tables_json: list) -> dict[str, list]:
     """Generates DDL strings from Spider tables.json.
