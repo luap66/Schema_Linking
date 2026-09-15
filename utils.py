@@ -253,7 +253,6 @@ def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, 
             collected_columns_input = current_column_input
             if overflow_stats is not None:
                 overflow_stats.setdefault(db_id, []).append(exceeded_by)
-            print(f"Could not fit all tables of db {db_id} inside the context window of {context_window} (exceeded by {exceeded_by} tokens).")
         else:
             # The schema input is still small enough, so the schema of the current table can be concatenated to the schema_input item
             collected_ddl_input = new_ddl_input
