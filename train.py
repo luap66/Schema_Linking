@@ -11,6 +11,7 @@ Saves:
 """
 
 import re
+from datetime import datetime
 
 import torch
 import torch.nn as nn
@@ -41,8 +42,9 @@ LORA_ALPHA = 32 # Gewichtung LoRa-Beitrag
 LORA_DROPOUT = 0.05
 # Nur die Query- und Value-Projektionen, weil für Finetuning am effektivsten
 LORA_TARGET_MODULES = ["q_proj", "v_proj"]
-SAVE_LORA_PATH = "exsl_lora"
-SAVE_HEAD_PATH = "exsl_head.pt"
+RUN_ID = datetime.now().strftime("%Y%m%d_%H%M%S")
+SAVE_LORA_PATH = f"exsl_lora_{RUN_ID}"
+SAVE_HEAD_PATH = f"exsl_head_{RUN_ID}.pt"
 
 
 # ---------------------------------------------------------------------------
