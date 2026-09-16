@@ -211,17 +211,65 @@ def build_schema_linker_prompt(ddl_input: str, question_text: str, columns_input
     return ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + columns_input
 
 
-def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, db_id, tokenizer=None,
-                               overflow_stats: dict = None) -> list:
-    """Builds schema linker inputs for a single question. Splits the database schema into multiple
-    chunks if the full schema exceeds the context window size.
+# Matches "FOREIGN KEY (...) REFERENCES `table` (...)" as embedded in the generated DDL strings
+# of both Spider (spider_data.generate_spider_ddl) and Spider-Ent (data_assets.json).
+_FK_REF_REGEX = re.compile(r'FOREIGN KEY\s*\([^)]*\)\s*REFERENCES\s*`?([^`\s(]+)`?\s*\(', re.IGNORECASE)
+
+
+def _extract_fk_targets(ddl: str) -> set:
+    """Returns the lowercased names of tables a table's DDL references via FOREIGN KEY ... REFERENCES."""
+    return {t.lower() for t in _FK_REF_REGEX.findall(ddl)}
+
+
+def group_tables_by_fk_component(tables_ddl_canditates: list) -> list:
+    """Partitions tables into foreign-key-connected components (undirected, transitive): tables
+    joined via a foreign key - directly or through intermediate tables - end up in the same group.
+    A table with no foreign-key relation to any other candidate forms its own single-table group.
+    The relative order of tables from tables_ddl_canditates is preserved within and across groups,
+    so behaviour degenerates to the original table order when no foreign keys are present.
+    Uses a plain adjacency-dict + DFS (connected components), not a graph library, since the graphs
+    here are tiny (a few dozen tables/edges per database)."""
+    name_to_table = {}
+    for table in tables_ddl_canditates:
+        name = table.get('candidates').get('table')
+        if name:
+            name_to_table[name.lower()] = table
+
+    adjacency = defaultdict(set)
+    for name, table in name_to_table.items():
+        for ref in _extract_fk_targets(table.get('ddl') or ''):
+            if ref in name_to_table:
+                adjacency[name].add(ref)
+                adjacency[ref].add(name)
+
+    visited = set()
+    groups = []
+    for table in tables_ddl_canditates:
+        name = table.get('candidates').get('table')
+        if not name or name.lower() in visited:
+            continue
+        component = set()
+        stack = [name.lower()]
+        while stack:
+            node = stack.pop()
+            if node in component:
+                continue
+            component.add(node)
+            stack.extend(adjacency[node] - component)
+        visited |= component
+        groups.append([t for t in tables_ddl_canditates
+                        if t.get('candidates').get('table') and t.get('candidates').get('table').lower() in component])
+
+    return groups
+
+
+def _pack_tables_into_chunks(tables_ddl_canditates: list, question_text: str, context_window: int, db_id, tokenizer=None,
+                              overflow_stats: dict = None) -> list:
+    """Greedily packs tables (in the given order) into as few prompt chunks as fit the context window.
     Without a tokenizer the token count is estimated from the character count (see CHARS_PER_TOKEN_ESTIMATE).
     Without a context window the whole schema ends up in a single chunk.
     If overflow_stats is given, every split appends the number of tokens the next table would have exceeded
-    the context window by to overflow_stats[db_id].
-    Returns a list of prompt strings, each containing a subset of tables and their candidate columns."""
-    if tokenizer is not None and context_window is None:
-        raise ValueError("context_window is required when a tokenizer is given")
+    the context window by to overflow_stats[db_id]."""
     schema_linker_inputs = []
     collected_ddl_input = ""
     collected_columns_input = ""
@@ -263,6 +311,69 @@ def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, 
         schema_linker_inputs.append(build_schema_linker_prompt(collected_ddl_input, question_text, collected_columns_input))
 
     return schema_linker_inputs
+
+
+def _pack_components_into_chunks(components: list, question_text: str, context_window: int, db_id, tokenizer=None,
+                                  overflow_stats: dict = None) -> list:
+    """Bin-packs whole foreign-key-connected components (see group_tables_by_fk_component) into chunks:
+    as many complete components as fit are combined into one chunk, so unrelated small components still
+    get packed densely together. A chunk boundary only ever falls inside a component when that single
+    component alone does not fit into an (otherwise empty) chunk - in that case it is split table-by-table
+    via _pack_tables_into_chunks, same as before."""
+    schema_linker_inputs = []
+    pending = []  # tables of whole components accumulated so far that still fit together in one chunk
+    for component in components:
+        candidate = pending + component
+        if len(_pack_tables_into_chunks(candidate, question_text, context_window, db_id, tokenizer)) <= 1:
+            pending = candidate
+            continue
+        if pending:
+            schema_linker_inputs.extend(
+                _pack_tables_into_chunks(pending, question_text, context_window, db_id, tokenizer, overflow_stats)
+            )
+        if len(_pack_tables_into_chunks(component, question_text, context_window, db_id, tokenizer)) <= 1:
+            pending = component
+        else:
+            # This single component alone already overflows a chunk - split it internally.
+            schema_linker_inputs.extend(
+                _pack_tables_into_chunks(component, question_text, context_window, db_id, tokenizer, overflow_stats)
+            )
+            pending = []
+    if pending:
+        schema_linker_inputs.extend(
+            _pack_tables_into_chunks(pending, question_text, context_window, db_id, tokenizer, overflow_stats)
+        )
+    return schema_linker_inputs
+
+
+def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, db_id, tokenizer=None,
+                               overflow_stats: dict = None) -> list:
+    """Builds schema linker inputs for a single question. Splits the database schema into multiple
+    chunks if the full schema exceeds the context window size.
+
+    The whole schema is first packed in its original table order (see _pack_tables_into_chunks).
+    If that already fits into a single chunk, it is returned unchanged - this is the case for
+    almost all Spider-Train and all Spider-Val questions.
+    Only when a split is actually unavoidable (the schema overflows the context window) are the
+    tables first grouped into foreign-key-connected components (see group_tables_by_fk_component),
+    which are then bin-packed into chunks (see _pack_components_into_chunks) - so a split never
+    separates tables that are joined via a foreign key unless a single component is itself too
+    large for one chunk, while unrelated small components still get packed densely together.
+
+    Without a tokenizer the token count is estimated from the character count (see CHARS_PER_TOKEN_ESTIMATE).
+    Without a context window the whole schema ends up in a single chunk.
+    If overflow_stats is given, every split appends the number of tokens the next table would have exceeded
+    the context window by to overflow_stats[db_id].
+    Returns a list of prompt strings, each containing a subset of tables and their candidate columns."""
+    if tokenizer is not None and context_window is None:
+        raise ValueError("context_window is required when a tokenizer is given")
+
+    trial = _pack_tables_into_chunks(tables_ddl_canditates, question_text, context_window, db_id, tokenizer)
+    if len(trial) <= 1:
+        return trial
+
+    components = group_tables_by_fk_component(tables_ddl_canditates)
+    return _pack_components_into_chunks(components, question_text, context_window, db_id, tokenizer, overflow_stats)
 
 def get_gold_schema(query:str, db_tables):
     gold_schema = parse_orig_sql(query)
