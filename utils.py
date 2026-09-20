@@ -1,6 +1,6 @@
 import math
 import re
-from collections import defaultdict
+from collections import defaultdict, deque
 
 from mo_sql_parsing import parse as mo_parse
 
@@ -211,14 +211,52 @@ def build_schema_linker_prompt(ddl_input: str, question_text: str, columns_input
     return ddl_input + "\nTo answer: " + question_text + "\nWe need columns:" + columns_input
 
 
-# Matches "FOREIGN KEY (...) REFERENCES `table` (...)" as embedded in the generated DDL strings
-# of both Spider (spider_data.generate_spider_ddl) and Spider-Ent (data_assets.json).
-_FK_REF_REGEX = re.compile(r'FOREIGN KEY\s*\([^)]*\)\s*REFERENCES\s*`?([^`\s(]+)`?\s*\(', re.IGNORECASE)
+# Matches "FOREIGN KEY (from_col, ...) REFERENCES `table` (to_col, ...)" as embedded in the generated
+# DDL strings of both Spider (spider_data.generate_spider_ddl) and Spider-Ent (data_assets.json).
+# Composite keys only contribute their first column - Spider FKs are single-column in practice.
+_FK_EDGE_REGEX = re.compile(
+    r'FOREIGN KEY\s*\(\s*`?([^`,)\s]+)`?[^)]*\)\s*REFERENCES\s*`?([^`\s(]+)`?\s*\(\s*`?([^`,)\s]+)`?',
+    re.IGNORECASE,
+)
+
+
+def _extract_fk_edges(ddl: str) -> list:
+    """Returns (from_column_lower, to_table_lower, to_column_lower) for every FOREIGN KEY ...
+    REFERENCES ... constraint embedded in a table's DDL."""
+    return [(from_col.lower(), to_table.lower(), to_col.lower())
+            for from_col, to_table, to_col in _FK_EDGE_REGEX.findall(ddl)]
 
 
 def _extract_fk_targets(ddl: str) -> set:
     """Returns the lowercased names of tables a table's DDL references via FOREIGN KEY ... REFERENCES."""
-    return {t.lower() for t in _FK_REF_REGEX.findall(ddl)}
+    return {to_table for _, to_table, _ in _extract_fk_edges(ddl)}
+
+
+def _build_fk_adjacency(name_to_ddl: dict) -> dict:
+    """Undirected FK adjacency (by lowercased table name), built from generated DDL strings via
+    _extract_fk_targets, restricted to the tables in name_to_ddl."""
+    adjacency = defaultdict(set)
+    for name, ddl in name_to_ddl.items():
+        for ref in _extract_fk_targets(ddl):
+            if ref in name_to_ddl:
+                adjacency[name].add(ref)
+                adjacency[ref].add(name)
+    return adjacency
+
+
+def _build_fk_column_adjacency(name_to_ddl: dict) -> dict:
+    """Undirected FK adjacency that also records which column of each table participates in the
+    relationship: adjacency[a][b] is the column of `a` used to join with `b`. If several foreign
+    keys connect the same two tables, the first one found wins - composite/multi-FK relationships
+    between the same table pair are rare in Spider and not modelled further."""
+    adjacency = defaultdict(dict)
+    for name, ddl in name_to_ddl.items():
+        for from_col, to_table, to_col in _extract_fk_edges(ddl):
+            if to_table not in name_to_ddl:
+                continue
+            adjacency[name].setdefault(to_table, from_col)
+            adjacency[to_table].setdefault(name, to_col)
+    return adjacency
 
 
 def group_tables_by_fk_component(tables_ddl_canditates: list) -> list:
@@ -235,12 +273,7 @@ def group_tables_by_fk_component(tables_ddl_canditates: list) -> list:
         if name:
             name_to_table[name.lower()] = table
 
-    adjacency = defaultdict(set)
-    for name, table in name_to_table.items():
-        for ref in _extract_fk_targets(table.get('ddl') or ''):
-            if ref in name_to_table:
-                adjacency[name].add(ref)
-                adjacency[ref].add(name)
+    adjacency = _build_fk_adjacency({name: t.get('ddl') or '' for name, t in name_to_table.items()})
 
     visited = set()
     groups = []
@@ -401,3 +434,90 @@ def get_gold_schema(query:str, db_tables):
                 if schema_table_name.lower() == table.lower():
                     columns.append(schema_table['candidates']['columns'][0])
     return gold_schema
+
+
+def _shortest_path_between_sets(adjacency: dict, sources: set, targets: set) -> list:
+    """Multi-source BFS shortest path from any node in sources to any node in targets.
+    Returns the full path (a source .. a target) or None if no target is reachable."""
+    visited = set(sources)
+    queue = deque([[s] for s in sources])
+    while queue:
+        path = queue.popleft()
+        for neighbor in adjacency.get(path[-1], ()):
+            if neighbor in visited:
+                continue
+            new_path = path + [neighbor]
+            if neighbor in targets:
+                return new_path
+            visited.add(neighbor)
+            queue.append(new_path)
+    return None
+
+
+def add_missing_bridge_tables(pred_schema: dict, tables_ddl_canditates: list) -> dict:
+    """Completes a predicted schema (as produced by schema-linking inference, without access to
+    gold SQL) with bridge tables: tables that only contribute a JOIN condition between other
+    relevant tables and never a SELECT/WHERE/GROUP BY/... column (see Bridge-Tables.ipynb). A
+    purely column-relevance-based classifier has no lexical signal for such a table and can never
+    predict it directly - it has to be reconstructed structurally from the FK graph afterwards.
+
+    Tables in pred_schema that are not reachable from each other via other predicted tables are
+    connected via the shortest path through the *full* FK graph of the database (built the same
+    way as group_tables_by_fk_component). Every table on that path not already in pred_schema is
+    added with the FK column(s) that actually tie it into the path - the column(s) of that table
+    used in its FOREIGN KEY relationship to its neighbour(s) on the path - since the column-level
+    gold schema (get_gold_schema/parse_orig_sql) credits exactly those join columns for a bridge
+    table, not an arbitrary one. Predicted tables with no FK path between them at all (e.g.
+    disconnected schema components) are left as-is, since there is no FK-justified way to add a
+    JOIN between them.
+    """
+    name_to_ddl = {
+        table['candidates']['table'].lower(): table.get('ddl') or ''
+        for table in tables_ddl_canditates if table.get('candidates', {}).get('table')
+    }
+    column_adjacency = _build_fk_column_adjacency(name_to_ddl)
+    full_adjacency = {name: set(neighbors) for name, neighbors in column_adjacency.items()}
+
+    result = {t.lower(): list(cols) for t, cols in pred_schema.items()}
+    predicted = set(result.keys())
+    if len(predicted) < 2:
+        return result
+
+    # Connected components of the predicted tables, using only direct predicted-predicted FK edges
+    components = []
+    unvisited = set(predicted)
+    while unvisited:
+        component = {next(iter(unvisited))}
+        stack = list(component)
+        while stack:
+            node = stack.pop()
+            for neighbor in (full_adjacency.get(node, set()) & predicted) - component:
+                component.add(neighbor)
+                stack.append(neighbor)
+        components.append(component)
+        unvisited -= component
+
+    # Greedily connect the nearest pair of components until one component remains (or no more
+    # FK path exists between the rest) - the common case is exactly two components one hop apart.
+    while len(components) > 1:
+        best = None  # (path, i, j)
+        for i in range(len(components)):
+            for j in range(i + 1, len(components)):
+                path = _shortest_path_between_sets(full_adjacency, components[i], components[j])
+                if path and (best is None or len(path) < len(best[0])):
+                    best = (path, i, j)
+        if best is None:
+            break
+        path, i, j = best
+        for pos in range(1, len(path) - 1):
+            bridge_table = path[pos]
+            if bridge_table in result:
+                continue
+            join_cols = [column_adjacency[bridge_table][neighbor]
+                         for neighbor in (path[pos - 1], path[pos + 1])]
+            # dedupe while preserving order, in case both neighbours join on the same column
+            result[bridge_table] = list(dict.fromkeys(join_cols))
+        merged = components[i] | components[j] | set(path)
+        components = [c for k, c in enumerate(components) if k not in (i, j)] + [merged]
+
+    return result
