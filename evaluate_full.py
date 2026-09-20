@@ -20,8 +20,14 @@ from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 
 from model import ExSLModel
-from spider_data import get_spider_val
-from spider_ent_data import get_ent_gold_schema_neu, get_spider_ent_data, spider_ent
+from spider_data import get_spider_schema_ddl_and_candidates, get_spider_val, spider_val
+from spider_ent_data import (
+    get_ent_gold_schema_neu,
+    get_spider_ent_data,
+    schema_with_parsed_candidates as ent_schema_with_parsed_candidates,
+    spider_ent,
+)
+from utils import add_missing_bridge_tables
 
 # ---------------------------------------------------------------------------
 # Argument parsing
@@ -158,20 +164,39 @@ def evaluate():
     if args.dataset in ("spider", "both"):
         print("\nLoading Spider Dev …")
         spider_dev_data = get_spider_val(tokenizer, MAX_TOKENS)
-        preds_dev, golds_dev = [], []
-        for item in tqdm(spider_dev_data, desc="Spider Dev", dynamic_ncols=True):
-            preds_dev.append(predict_schema(model, tokenizer, item))
+        spider_schema_ddls_and_candidates = get_spider_schema_ddl_and_candidates()
+        preds_dev_no_bridge, preds_dev_bridged, golds_dev = [], [], []
+        for item, question in tqdm(
+            zip(spider_dev_data, spider_val), total=len(spider_val), desc="Spider Dev", dynamic_ncols=True
+        ):
+            pred_schema = predict_schema(model, tokenizer, item)
+            db_tables = spider_schema_ddls_and_candidates[question["db_id"]]
+            preds_dev_no_bridge.append(pred_schema)
+            preds_dev_bridged.append(add_missing_bridge_tables(pred_schema, db_tables))
             golds_dev.append(item["gold_schema"])
-        _print_metrics("Spider Dev", compute_metrics(preds_dev, golds_dev))
 
     if args.dataset in ("spider_ent", "both"):
         print("\nLoading Spider-Ent …")
         spider_ent_data = get_spider_ent_data(tokenizer, MAX_TOKENS)
-        preds_ent, golds_ent = [], []
+        preds_ent_no_bridge, preds_ent_bridged, golds_ent = [], [], []
         for item, question in tqdm(zip(spider_ent_data, spider_ent), total=len(spider_ent), desc="Spider-Ent", dynamic_ncols=True):
-            preds_ent.append(predict_schema(model, tokenizer, item))
+            pred_schema = predict_schema(model, tokenizer, item)
+            db_tables = ent_schema_with_parsed_candidates[question["data_asset"]]
+            preds_ent_no_bridge.append(pred_schema)
+            preds_ent_bridged.append(add_missing_bridge_tables(pred_schema, db_tables))
             golds_ent.append(get_ent_gold_schema_neu(question))
-        _print_metrics("Spider-Ent", compute_metrics(preds_ent, golds_ent))
+
+    print(f"\n{'#'*40}\n#  Ohne Bridge-Tables\n{'#'*40}")
+    if args.dataset in ("spider", "both"):
+        _print_metrics("Spider Dev", compute_metrics(preds_dev_no_bridge, golds_dev))
+    if args.dataset in ("spider_ent", "both"):
+        _print_metrics("Spider-Ent", compute_metrics(preds_ent_no_bridge, golds_ent))
+
+    print(f"\n{'#'*40}\n#  Mit Bridge-Tables\n{'#'*40}")
+    if args.dataset in ("spider", "both"):
+        _print_metrics("Spider Dev", compute_metrics(preds_dev_bridged, golds_dev))
+    if args.dataset in ("spider_ent", "both"):
+        _print_metrics("Spider-Ent", compute_metrics(preds_ent_bridged, golds_ent))
 
 
 if __name__ == "__main__":
