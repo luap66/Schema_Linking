@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "schema-linking"
+version = "0.1.0"
+description = "Extractive Schema Linking on Spider and Spider-Ent"
+requires-python = ">=3.10"
+
+[tool.setuptools.packages.find]
+include = ["src*"]
+namespaces = true

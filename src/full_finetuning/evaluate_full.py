@@ -14,6 +14,7 @@ Expects trained artefacts:
 import argparse
 import os
 import re
+from pathlib import Path
 
 import torch
 from tqdm import tqdm
@@ -38,7 +39,10 @@ def parse_args():
     parser.add_argument("--max_tokens", type=int, default=3000)
     parser.add_argument("--threshold", type=float, default=-3.0, help="Logit threshold for positive prediction")
     parser.add_argument("--dataset", choices=["spider", "spider_ent", "both"], default="both")
-    _out = os.environ.get("OUTPUT_DIR", "../..")
+    # Defaults to the repo root, resolved relative to this file so it does not
+    # depend on the working directory the script is launched from.
+    repo_root = Path(__file__).resolve().parents[2]
+    _out = os.environ.get("OUTPUT_DIR", str(repo_root))
     parser.add_argument("--model_path", default=os.path.join(_out, "exsl_full"))
     parser.add_argument("--head_path", default=os.path.join(_out, "exsl_head_full.pt"))
     return parser.parse_args()

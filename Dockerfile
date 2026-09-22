@@ -20,8 +20,14 @@ RUN pip3 install --no-cache-dir \
     mo-sql-parsing \
     python-dotenv
 
-# Copy project files
-COPY *.py ./
+# Copy project files (train_full.py now lives under src/full_finetuning/, and
+# imports other modules via "src...." package paths)
+COPY pyproject.toml ./
+COPY src/ ./src/
 COPY data/ ./data/
 
-CMD ["python3", "train_full.py"]
+# Editable install so the "src...." imports work regardless of the working
+# directory (same mechanism used for local development, see README)
+RUN pip3 install --no-cache-dir --no-deps -e .
+
+CMD ["python3", "src/full_finetuning/train_full.py"]

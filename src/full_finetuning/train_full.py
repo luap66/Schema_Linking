@@ -20,6 +20,7 @@ import argparse
 import os
 import random
 import re
+from pathlib import Path
 
 import torch
 import torch.nn as nn
@@ -58,8 +59,11 @@ NUM_EPOCHS = args.epochs
 LR = args.lr
 GRAD_ACCUM_STEPS = args.grad_accum
 MAX_TOKENS = args.max_tokens
-# Output directory — override with OUTPUT_DIR env var (e.g. /app/output in Docker)
-_OUT = os.environ.get("OUTPUT_DIR", "../..")
+# Output directory — override with OUTPUT_DIR env var (e.g. /app/output in Docker).
+# Defaults to the repo root, resolved relative to this file so it does not depend
+# on the working directory the script is launched from.
+REPO_ROOT = Path(__file__).resolve().parents[2]
+_OUT = os.environ.get("OUTPUT_DIR", str(REPO_ROOT))
 SAVE_MODEL_PATH = os.path.join(_OUT, "exsl_full")
 SAVE_HEAD_PATH = os.path.join(_OUT, "exsl_head_full.pt")
 
