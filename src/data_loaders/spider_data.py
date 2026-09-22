@@ -1,4 +1,5 @@
 import json
+from pathlib import Path
 
 from datasets import load_dataset, Dataset
 from src.utils import create_schema_linker_input, parse_ddl, get_gold_schema
@@ -7,7 +8,11 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-with open('../../data/spider/tables.json', 'r', encoding='utf-8') as f:
+# Repo-root-relativer Pfad (unabhaengig vom Arbeitsverzeichnis, aus dem das
+# importierende Skript gestartet wird).
+DATA_DIR = Path(__file__).resolve().parents[2] / "data"
+
+with open(DATA_DIR / "spider" / "tables.json", 'r', encoding='utf-8') as f:
     spider_tables = json.load(f)
 
 spider_train = load_dataset("xlangai/spider", split="train")

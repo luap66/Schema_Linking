@@ -19,7 +19,7 @@ from transformers import AutoTokenizer
 from src.data_loaders.spider_data import get_spider_schema_ddl_and_candidates
 from src.data_loaders.spider_ent_data import schema_with_parsed_candidates as ent_schemas
 from src.utils import group_tables_by_fk_component, _pack_tables_into_chunks
-from find_hub_tables import find_hub_tables
+from src.analysis.find_hub_tables import find_hub_tables
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")

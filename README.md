@@ -4,14 +4,18 @@
 # CUDA 11.8 vorausgesetzt
 pip install -r requirements.txt
 
+# Projekt als editable Package installieren, damit "src...."-Imports und
+# Datenpfade unabhaengig vom Arbeitsverzeichnis funktionieren
+pip install -e .
+
 # TensorFlow deinstallieren falls vorhanden
 pip uninstall tensorflow -y
 
 # Training
-python train.py
+python src/QLora/train.py
 
 # Evaluation
-python evaluate.py
+python src/QLora/evaluate.py
 ```
 
 ## Hardware
