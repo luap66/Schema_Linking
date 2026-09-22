@@ -20,8 +20,8 @@ from torch.optim import AdamW
 from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer, BitsAndBytesConfig
 
-from model import ExSLModel
-from spider_data import get_spider_train
+from src.model import ExSLModel
+from src.data_loaders.spider_data import get_spider_train
 import os
 os.environ["USE_TF"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
