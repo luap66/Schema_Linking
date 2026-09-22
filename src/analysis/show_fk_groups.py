@@ -9,8 +9,8 @@ import re
 
 from transformers import AutoTokenizer
 
-from spider_data import get_spider_schema_ddl_and_candidates, spider_train
-from utils import group_tables_by_fk_component, create_schema_linker_input, _extract_fk_targets
+from src.data_loaders.spider_data import get_spider_schema_ddl_and_candidates, spider_train
+from src.utils import group_tables_by_fk_component, create_schema_linker_input, _extract_fk_targets
 
 DB_ID = "baseball_1"
 MODEL_NAME = "deepseek-ai/deepseek-coder-6.7b-base"

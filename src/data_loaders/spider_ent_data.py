@@ -1,14 +1,14 @@
 import json
 
-from utils import parse_orig_sql, create_schema_linker_input, parse_ddl
+from src.utils import parse_orig_sql, create_schema_linker_input, parse_ddl
 
-with open('data/spider_ent/Spider-Ent.json', 'r', encoding='utf-8') as f:
+with open('../../data/spider_ent/Spider-Ent.json', 'r', encoding='utf-8') as f:
     spider_ent = json.load(f)
 
-with open('data/spider_ent/data_assets.json', 'r', encoding='utf-8') as f:
+with open('../../data/spider_ent/data_assets.json', 'r', encoding='utf-8') as f:
     schema = json.load(f)
 
-with open('data/spider_ent/column_name_mappings.json', 'r', encoding='utf-8') as f:
+with open('../../data/spider_ent/column_name_mappings.json', 'r', encoding='utf-8') as f:
     raw = json.load(f)
     column_mappings = {
         db: {
@@ -18,7 +18,7 @@ with open('data/spider_ent/column_name_mappings.json', 'r', encoding='utf-8') as
         for db, tables in raw.items()
     }
 
-with open('data/spider_ent/table_name_mappings.json', 'r', encoding='utf-8') as f:
+with open('../../data/spider_ent/table_name_mappings.json', 'r', encoding='utf-8') as f:
     raw = json.load(f)
     table_mappings = {
         db: {k.lower(): v for k, v in tables.items()}
@@ -85,6 +85,7 @@ def get_ent_gold_schema_neu(question: dict) -> dict[str, list]:
             try:
                 ent_column = column_mappings.get(eval_db).get(orig_table.lower()).get(orig_column.lower())
             except AttributeError:
+                print(f"Warning: Could not find mapping for column '{orig_column}' in table '{orig_table}' for database '{eval_db}'. SQL: {question['original_SQL']}")
                 continue
             ent_columns.append(ent_column)
         gold_schema[ent_table_name] = ent_columns

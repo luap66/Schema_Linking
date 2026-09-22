@@ -90,7 +90,7 @@ def _handle_select(node, result):
     for ref in refs:
         if '.' in ref:
             alias, col = ref.split('.', 1)
-            tbl = alias_map.get(alias, alias).lower()
+            tbl = alias_map.get(alias.lower(), alias).lower()
             result[tbl].add(col.lower())
         elif len(tables) == 1:
             result[tables[0].lower()].add(ref.lower())
@@ -128,7 +128,7 @@ def _extract_tables(clause, alias_map, tables, result):
             if isinstance(val, str):
                 tables.append(val)
                 if 'name' in clause:
-                    alias_map[clause['name']] = val
+                    alias_map[clause['name'].lower()] = val
             elif isinstance(val, dict):
                 _walk_query(val, result)  # Subquery in FROM
         # JOIN-Klauseln
@@ -141,7 +141,7 @@ def _extract_tables(clause, alias_map, tables, result):
                     if 'value' in j and isinstance(j['value'], str):
                         tables.append(j['value'])
                         if 'name' in j:
-                            alias_map[j['name']] = j['value']
+                            alias_map[j['name'].lower()] = j['value']
                     elif 'value' in j and isinstance(j['value'], dict):
                         _walk_query(j['value'], result)
     elif isinstance(clause, list):

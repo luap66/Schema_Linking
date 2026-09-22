@@ -17,9 +17,9 @@ try:
 except AttributeError:
     pass  # z.B. wenn stdout umgeleitet ist und kein TextIOWrapper ist
 
-from spider_data import get_spider_schema_ddl_and_candidates
-from spider_ent_data import schema_with_parsed_candidates as ent_schemas
-from utils import _extract_fk_targets, create_schema_linker_input
+from src.data_loaders.spider_data import get_spider_schema_ddl_and_candidates
+from src.data_loaders.spider_ent_data import schema_with_parsed_candidates as ent_schemas
+from src.utils import _extract_fk_targets, create_schema_linker_input
 
 MODEL_NAME = "deepseek-ai/deepseek-coder-6.7b-base"
 MAX_TOKENS = 3000

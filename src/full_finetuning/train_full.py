@@ -27,8 +27,8 @@ from torch.optim import AdamW
 from tqdm import tqdm
 from transformers import AutoModel, AutoTokenizer
 
-from model import ExSLModel
-from spider_data import get_spider_train
+from src.model import ExSLModel
+from src.data_loaders.spider_data import get_spider_train
 
 os.environ["USE_TF"] = "0"
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
@@ -59,7 +59,7 @@ LR = args.lr
 GRAD_ACCUM_STEPS = args.grad_accum
 MAX_TOKENS = args.max_tokens
 # Output directory — override with OUTPUT_DIR env var (e.g. /app/output in Docker)
-_OUT = os.environ.get("OUTPUT_DIR", ".")
+_OUT = os.environ.get("OUTPUT_DIR", "../..")
 SAVE_MODEL_PATH = os.path.join(_OUT, "exsl_full")
 SAVE_HEAD_PATH = os.path.join(_OUT, "exsl_head_full.pt")
 
