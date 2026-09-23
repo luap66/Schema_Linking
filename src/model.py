@@ -43,10 +43,12 @@ class ExSLModel(nn.Module):
         for alpha, omega in zip(open_pos, close_pos):
             # Vektor an der « Position – enkodiert die Semantik aller 
             # vorangegangenen Tokens (Schema DDL + Frage + bisherige Kandidaten)
+            # 0 = erster Batch, alpha = Position in der Sequenz, : = kompletter Feature-Vektor
             e_alpha = hidden[0, alpha, :]
             
             # Vektor an der » Position – enkodiert zusätzlich den Tabellen- 
             # und Spaltennamen des Kandidaten selbst
+            # 0 = erster Batch, omega = Position in der Sequenz, : = kompletter Feature-Vektor
             e_omega = hidden[0, omega, :]
             # Konkatiniert die Vektoren und fügt sie der Liste aller Candidates hinzu
             pair_vectors.append(torch.cat([e_alpha, e_omega], dim=-1)) 
