@@ -457,9 +457,7 @@ def _shortest_path_between_sets(adjacency: dict, sources: set, targets: set) -> 
 def add_missing_bridge_tables(pred_schema: dict, tables_ddl_canditates: list) -> dict:
     """Completes a predicted schema (as produced by schema-linking inference, without access to
     gold SQL) with bridge tables: tables that only contribute a JOIN condition between other
-    relevant tables and never a SELECT/WHERE/GROUP BY/... column (see Bridge-Tables.ipynb). A
-    purely column-relevance-based classifier has no lexical signal for such a table and can never
-    predict it directly - it has to be reconstructed structurally from the FK graph afterwards.
+    relevant tables and never a SELECT/WHERE/GROUP BY/... column (see Bridge-Tables.ipynb).
 
     Tables in pred_schema that are not reachable from each other via other predicted tables are
     connected via the shortest path through the *full* FK graph of the database (built the same

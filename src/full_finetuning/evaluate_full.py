@@ -23,7 +23,7 @@ from transformers import AutoModel, AutoTokenizer
 from src.model import ExSLModel
 from src.data_loaders.spider_data import get_spider_schema_ddl_and_candidates, get_spider_val, spider_val
 from src.data_loaders.spider_ent_data import (
-    get_ent_gold_schema_neu,
+    get_ent_gold_schema,
     get_spider_ent_data,
     schema_with_parsed_candidates as ent_schema_with_parsed_candidates,
     spider_ent,
@@ -188,7 +188,7 @@ def evaluate():
             db_tables = ent_schema_with_parsed_candidates[question["data_asset"]]
             preds_ent_no_bridge.append(pred_schema)
             preds_ent_bridged.append(add_missing_bridge_tables(pred_schema, db_tables))
-            golds_ent.append(get_ent_gold_schema_neu(question))
+            golds_ent.append(get_ent_gold_schema(question))
 
     print(f"\n{'#'*40}\n#  Ohne Bridge-Tables\n{'#'*40}")
     if args.dataset in ("spider", "both"):

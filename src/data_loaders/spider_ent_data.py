@@ -54,24 +54,11 @@ def get_spider_ent_data(tokenizer=None, max_tokens=None, overflow_stats: dict = 
     for q in spider_ent:
         db_ddls_and_candidates = schema_with_parsed_candidates.get(q['data_asset'])
         schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, q['data_asset'], tokenizer, overflow_stats)
-        gold_schema = get_ent_gold_schema_neu(q)
+        gold_schema = get_ent_gold_schema(q)
         schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
     return schema_linker_inputs
 
-# Noch nötig?
-def translate_column_names(ent_table_name: str, orig_column_names: list) -> list:
-    """Maps the column names of a table from the original Spider Benchmark to the column name of Spider-Ent"""
-    table_info = {}
-    for category, tables in table_mappings.items():
-        for orig_table, ent_table in tables.items():
-            columns = column_mappings.get(category).get(orig_table)
-            table_info[ent_table] = {"category": category, 'original_name': orig_table, 'columns': columns}
-    column_translation = table_info.get(ent_table_name).get('columns')
-    lower_map = {k.lower(): v for k, v in column_translation.items()}
-    return [lower_map.get(col.lower()) for col in orig_column_names]
-
-
-def get_ent_gold_schema_neu(question: dict) -> dict[str, list]:
+def get_ent_gold_schema(question: dict) -> dict[str, list]:
     """Returns all tables and columns used in the SQL of a question translated to the ent schema"""
     gold_schema = {}
     eval_db = question['eval_db']
