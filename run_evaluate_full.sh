@@ -19,4 +19,4 @@ docker run --rm \
     -e HF_HOME=/root/.cache/huggingface \
     -e OUTPUT_DIR=/app/output \
     "$IMAGE_NAME" \
-    python3 evaluate_full.py "$@"
+    python3 src/full_finetuning/evaluate_full.py "$@"

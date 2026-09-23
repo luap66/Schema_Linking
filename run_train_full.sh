@@ -12,7 +12,7 @@ HF_CACHE="${HOME}/.cache/huggingface"   # reuse cached model weights across runs
 mkdir -p "$OUTPUT_DIR" "$HF_CACHE"
 
 # Build the Docker image (only needed once / after code changes)
-docker build -t "$IMAGE_NAME" .
+docker build -t "$IMAGE_NAME" . || exit 1
 
 # Run training
 docker run --rm \
@@ -26,4 +26,4 @@ docker run --rm \
     -e HF_HOME=/root/.cache/huggingface \
     -e OUTPUT_DIR=/app/output \
     "$IMAGE_NAME" \
-    python3 train_full.py "$@"
+    python3 src/full_finetuning/train_full.py "$@"

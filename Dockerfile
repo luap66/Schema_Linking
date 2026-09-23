@@ -22,12 +22,12 @@ RUN pip3 install --no-cache-dir \
 
 # Copy project files (train_full.py now lives under src/full_finetuning/, and
 # imports other modules via "src...." package paths)
-COPY pyproject.toml ./
 COPY src/ ./src/
 COPY data/ ./data/
 
-# Editable install so the "src...." imports work regardless of the working
-# directory (same mechanism used for local development, see README)
-RUN pip3 install --no-cache-dir --no-deps -e .
+# Put /app on the import path so the "src...." imports work. (No "pip install -e ."
+# here: Ubuntu 22.04's pip is too old for PEP 660 editable installs, and the run
+# scripts bind-mount the repo over /app anyway.)
+ENV PYTHONPATH=/app
 
 CMD ["python3", "src/full_finetuning/train_full.py"]
