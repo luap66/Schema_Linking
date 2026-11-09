@@ -11,6 +11,7 @@
 #
 # Umgebung:
 #   MAMMOTH_HOME       Installationsordner (Standard: /mnt/data/$USER/mammoth)
+#   MAMMOTH_VENV       optional, venv-Ordner (Standard: $MAMMOTH_HOME/venv)
 #   MAMMOTH_MODEL_DIR  optional, Ordner der Modellgewichte
 #   MAMMOTH_SETUP_DIR  Ordner mit setup_mammoth.sh + mammoth_decider.py (Standard: Ordner dieses Skripts)
 set -euo pipefail
@@ -19,7 +20,7 @@ HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 SETUP_DIR="${MAMMOTH_SETUP_DIR:-$HERE}"
 export MAMMOTH_HOME="${MAMMOTH_HOME:-/mnt/data/${USER}/mammoth}"
-VENV_PY="$MAMMOTH_HOME/venv/bin/python"
+VENV_PY="${MAMMOTH_VENV:-$MAMMOTH_HOME/venv}/bin/python"
 
 for f in setup_mammoth.sh mammoth_decider.py; do
     [ -f "$SETUP_DIR/$f" ] || { echo "FEHLER: $SETUP_DIR/$f fehlt (MAMMOTH_SETUP_DIR setzen oder Datei hierher kopieren)" >&2; exit 1; }
@@ -29,7 +30,7 @@ model_present() {
     if [ -n "${MAMMOTH_MODEL_DIR:-}" ]; then
         [ -n "$(find "$MAMMOTH_MODEL_DIR" -maxdepth 3 -name config.json -print -quit 2>/dev/null)" ]
     else
-        [ -n "$(find "$MAMMOTH_HOME" -path "$MAMMOTH_HOME/venv" -prune -o -name config.json -print -quit 2>/dev/null)" ]
+        [ -n "$(find "$MAMMOTH_HOME" \( -name venv -o -name site-packages \) -prune -o -name config.json -print -quit 2>/dev/null)" ]
     fi
 }
 
