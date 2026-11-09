@@ -10,3 +10,4 @@ docs
 models
 notes
 schema_linking.egg-info
+src/analysis/results
