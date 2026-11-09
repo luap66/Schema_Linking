@@ -1,48 +1,52 @@
 #!/usr/bin/env bash
 # Startet den Mammoth-Test auf dem ICC-GPU-Host. Prueft vorher, ob Mammoth installiert ist
-# (venv, Modellgewichte, importierbarer MammothDecider) und fuehrt sonst setup_mammoth.sh aus.
+# (venv, Modellgewichte, importierbare Engine) und fuehrt sonst setup_mammoth.sh aus (falls vorhanden).
 #
-#   bash src/mammoth/run_mammoth_test.sh                 # 30 Fragen, seed 42 (wie Jev-Test)
-#   bash src/mammoth/run_mammoth_test.sh --sample 0      # alle Spider-Ent-Fragen
-#   bash src/mammoth/run_mammoth_test.sh --probe         # nur Rohantwort des Deciders anzeigen
-#   REINSTALL=1 bash src/mammoth/run_mammoth_test.sh     # Installation erzwingen
+#   bash run_mammoth_test.sh                 # 30 Fragen, seed 42 (wie Jev-Test)
+#   bash run_mammoth_test.sh --sample 0      # alle Spider-Ent-Fragen
+#   bash run_mammoth_test.sh --probe         # nur Rohantwort des Deciders anzeigen
+#   REINSTALL=1 bash run_mammoth_test.sh     # Installation erzwingen
 #
 # Alle Argumente gehen unveraendert an run_mammoth_test.py (siehe --help dort).
 #
-# Umgebung:
-#   MAMMOTH_HOME       Installationsordner (Standard: /mnt/data/$USER/mammoth)
-#   MAMMOTH_VENV       optional, venv-Ordner (Standard: $MAMMOTH_HOME/venv)
-#   MAMMOTH_MODEL_DIR  optional, Ordner der Modellgewichte
-#   MAMMOTH_SETUP_DIR  Ordner mit setup_mammoth.sh + mammoth_decider.py (Standard: Ordner dieses Skripts)
+# Umgebung (Standardwerte passen zu ~/mammoth-env + ~/mammoth-1):
+#   MAMMOTH_VENV       venv-Ordner            (Standard: ~/mammoth-env, sonst $MAMMOTH_HOME/venv)
+#   MAMMOTH_MODEL_DIR  Ordner der Gewichte    (Standard: ~/mammoth-1, sonst $MAMMOTH_HOME)
+#   MAMMOTH_HOME       Installationsordner    (Standard: /mnt/data/$USER/mammoth)
+#   MAMMOTH_SETUP_DIR  Ordner mit setup_mammoth.sh (nur fuer die Neuinstallation noetig)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$HERE/../.." && pwd)"
 SETUP_DIR="${MAMMOTH_SETUP_DIR:-$HERE}"
 export MAMMOTH_HOME="${MAMMOTH_HOME:-/mnt/data/${USER}/mammoth}"
-VENV_PY="${MAMMOTH_VENV:-$MAMMOTH_HOME/venv}/bin/python"
-
-for f in setup_mammoth.sh mammoth_decider.py; do
-    [ -f "$SETUP_DIR/$f" ] || { echo "FEHLER: $SETUP_DIR/$f fehlt (MAMMOTH_SETUP_DIR setzen oder Datei hierher kopieren)" >&2; exit 1; }
-done
+if [ -z "${MAMMOTH_VENV:-}" ]; then
+    if [ -x "$HOME/mammoth-env/bin/python" ]; then MAMMOTH_VENV="$HOME/mammoth-env"; else MAMMOTH_VENV="$MAMMOTH_HOME/venv"; fi
+fi
+if [ -z "${MAMMOTH_MODEL_DIR:-}" ]; then
+    if [ -f "$HOME/mammoth-1/config.json" ]; then MAMMOTH_MODEL_DIR="$HOME/mammoth-1"; else MAMMOTH_MODEL_DIR="$MAMMOTH_HOME"; fi
+fi
+export MAMMOTH_VENV MAMMOTH_MODEL_DIR
+VENV_PY="$MAMMOTH_VENV/bin/python"
 
 model_present() {
-    if [ -n "${MAMMOTH_MODEL_DIR:-}" ]; then
-        [ -n "$(find "$MAMMOTH_MODEL_DIR" -maxdepth 3 -name config.json -print -quit 2>/dev/null)" ]
-    else
-        [ -n "$(find "$MAMMOTH_HOME" \( -name venv -o -name site-packages \) -prune -o -name config.json -print -quit 2>/dev/null)" ]
-    fi
+    [ -f "$MAMMOTH_MODEL_DIR/config.json" ] && ls "$MAMMOTH_MODEL_DIR"/*.safetensors >/dev/null 2>&1
 }
 
 is_installed() {
     [ -x "$VENV_PY" ] || { echo "-> venv fehlt ($VENV_PY)"; return 1; }
-    model_present || { echo "-> Modellgewichte nicht gefunden"; return 1; }
-    PYTHONPATH="$SETUP_DIR" "$VENV_PY" -c "import torch, transformers, mammoth_decider" 2>/dev/null \
-        || { echo "-> torch/transformers/mammoth_decider nicht importierbar"; return 1; }
+    model_present || { echo "-> Modellgewichte fehlen in $MAMMOTH_MODEL_DIR"; return 1; }
+    "$VENV_PY" -c "import torch, transformers, qev.engine, qev.schema" 2>/dev/null \
+        || { echo "-> torch/transformers/qev (OneJev-Runtime) nicht importierbar"; return 1; }
 }
 
-echo "Pruefe Mammoth-Installation in $MAMMOTH_HOME ..."
+echo "Pruefe Mammoth-Installation (venv=$MAMMOTH_VENV, Modell=$MAMMOTH_MODEL_DIR) ..."
 if [ "${REINSTALL:-0}" = "1" ] || ! is_installed; then
+    [ -f "$SETUP_DIR/setup_mammoth.sh" ] || {
+        echo "FEHLER: Mammoth ist nicht (vollstaendig) installiert und $SETUP_DIR/setup_mammoth.sh fehlt." >&2
+        echo "        setup_mammoth.sh dorthin kopieren oder MAMMOTH_SETUP_DIR setzen." >&2
+        exit 1
+    }
     echo "Installiere Mammoth (setup_mammoth.sh) ..."
     mkdir -p "$MAMMOTH_HOME"
     bash "$SETUP_DIR/setup_mammoth.sh"
@@ -64,5 +68,5 @@ fi
 cd "$REPO_ROOT"
 # kein PYTORCH_CUDA_ALLOC_CONF=expandable_segments (auf den vGPU-VMs "operation not supported")
 unset PYTORCH_CUDA_ALLOC_CONF
-export PYTHONPATH="$SETUP_DIR:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONPATH="$HERE:$REPO_ROOT${PYTHONPATH:+:$PYTHONPATH}"
 exec "$VENV_PY" -u "$HERE/run_mammoth_test.py" "$@"
