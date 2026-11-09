@@ -89,9 +89,9 @@ def predict_schema(model, tokenizer, item: dict) -> dict[str, list[str]]:
     """
     pred_schema: dict[str, list[str]] = {}
 
-    for prompt in item["input"]:
+    for chunk in item["input"]:
         enc = tokenizer(
-            prompt,
+            chunk["prompt"],
             return_tensors="pt",
             max_length=MAX_TOKENS,
             truncation=True,
@@ -101,7 +101,7 @@ def predict_schema(model, tokenizer, item: dict) -> dict[str, list[str]]:
         open_pos, close_pos = _find_marker_positions(tokens)
 
         # Extract candidates from the original (untruncated) prompt text
-        candidates = re.findall(r"«\s+(\S+)\s+(\S+)\s*»", prompt)
+        candidates = re.findall(r"«\s+(\S+)\s+(\S+)\s*»", chunk["prompt"])
         n = min(len(open_pos), len(close_pos), len(candidates))
         if n == 0:
             continue

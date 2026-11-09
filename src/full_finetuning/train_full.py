@@ -90,10 +90,10 @@ def build_training_samples(raw_data: list[dict]) -> list[dict]:
     samples = []
     for item in raw_data:
         gold = item["gold_schema"]
-        for prompt in item["input"]:
-            labels = _get_candidate_labels(prompt, gold)
+        for chunk in item["input"]:
+            labels = _get_candidate_labels(chunk["prompt"], gold)
             if labels:
-                samples.append({"prompt": prompt, "labels": labels})
+                samples.append({"prompt": chunk["prompt"], "labels": labels})
     return samples
 
 

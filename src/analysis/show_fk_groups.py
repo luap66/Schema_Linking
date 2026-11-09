@@ -43,7 +43,7 @@ def main():
     chunks = create_schema_linker_input(db_tables, question_text, MAX_TOKENS, DB_ID, tokenizer)
     print(f"\n=> {len(chunks)} Chunk(s) bei max_tokens={MAX_TOKENS}\n")
 
-    chunk_tables = [tables_in_chunk(c) for c in chunks]
+    chunk_tables = [tables_in_chunk(c["prompt"]) for c in chunks]
 
     for i, names in enumerate(chunk_tables, start=1):
         print(f"Chunk {i} ({len(names)} Tabellen): {names}")

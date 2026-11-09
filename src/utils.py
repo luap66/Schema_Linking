@@ -297,7 +297,7 @@ def group_tables_by_fk_component(tables_ddl_canditates: list) -> list:
 
 
 def _pack_tables_into_chunks(tables_ddl_canditates: list, question_text: str, context_window: int, db_id, tokenizer=None,
-                              overflow_stats: dict = None) -> list:
+                              overflow_stats: dict = None, max_items: int = None) -> list[dict]:
     """Greedily packs tables (in the given order) into as few prompt chunks as fit the context window.
     Without a tokenizer the token count is estimated from the character count (see CHARS_PER_TOKEN_ESTIMATE).
     Without a context window the whole schema ends up in a single chunk.
@@ -306,6 +306,7 @@ def _pack_tables_into_chunks(tables_ddl_canditates: list, question_text: str, co
     schema_linker_inputs = []
     collected_ddl_input = ""
     collected_columns_input = ""
+    collected_column_candidates = []
     for table in tables_ddl_canditates:
 
         table_ddl = table.get("ddl")
@@ -313,41 +314,48 @@ def _pack_tables_into_chunks(tables_ddl_canditates: list, question_text: str, co
         column_list = table.get('candidates').get('columns')
 
         current_column_input = ""
+        current_column_candidates = []
 
         for column in column_list:
             current_column_input = current_column_input + "\n« " + table_name + " " + column + "»"
+            current_column_candidates.append(f"{table_name}.{column}")
 
         new_ddl_input = collected_ddl_input + "\n" + table_ddl
         new_columns_input = collected_columns_input + current_column_input
+        new_columns_candidates = collected_column_candidates + current_column_candidates
         exceeded_by = 0
         if context_window is not None:
             # Count the complete prompt incl. question template, otherwise chunks end up a few tokens too long and get truncated
             new_prompt = build_schema_linker_prompt(new_ddl_input, question_text, new_columns_input)
             exceeded_by = count_tokens(new_prompt, tokenizer) - context_window
+        elif max_items is not None:
+            exceeded_by = len(new_columns_candidates) - max_items
 
         # A table that does not even fit into an empty chunk gets its own chunk instead of producing an empty one
         if exceeded_by > 0 and collected_ddl_input:
             # Append old strings to the schema linker inputs, because adding another table would surpass the context window size.
-            schema_linker_inputs.append(build_schema_linker_prompt(collected_ddl_input, question_text, collected_columns_input))
+            schema_linker_inputs.append({"prompt": build_schema_linker_prompt(collected_ddl_input, question_text, collected_columns_input), "ddl": collected_ddl_input, "candidate_strings": collected_column_candidates})
             # Reset the schema_input variables to the values of this table, so the table can be included in the next schema linker inputs.
             collected_ddl_input = table_ddl
             collected_columns_input = current_column_input
+            collected_column_candidates = current_column_candidates
             if overflow_stats is not None:
                 overflow_stats.setdefault(db_id, []).append(exceeded_by)
         else:
             # The schema input is still small enough, so the schema of the current table can be concatenated to the schema_input item
             collected_ddl_input = new_ddl_input
             collected_columns_input = new_columns_input
+            collected_column_candidates = new_columns_candidates
 
     # Append the last remaining block
     if collected_ddl_input:
-        schema_linker_inputs.append(build_schema_linker_prompt(collected_ddl_input, question_text, collected_columns_input))
+        schema_linker_inputs.append({"prompt": build_schema_linker_prompt(collected_ddl_input, question_text, collected_columns_input), "ddl": collected_ddl_input, "candidate_strings": collected_column_candidates})
 
     return schema_linker_inputs
 
 
 def _pack_components_into_chunks(components: list, question_text: str, context_window: int, db_id, tokenizer=None,
-                                  overflow_stats: dict = None) -> list:
+                                  overflow_stats: dict = None) -> list[dict]:
     """Bin-packs whole foreign-key-connected components (see group_tables_by_fk_component) into chunks:
     as many complete components as fit are combined into one chunk, so unrelated small components still
     get packed densely together. A chunk boundary only ever falls inside a component when that single
@@ -380,7 +388,7 @@ def _pack_components_into_chunks(components: list, question_text: str, context_w
 
 
 def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, context_window: int, db_id, tokenizer=None,
-                               overflow_stats: dict = None) -> list:
+                               overflow_stats: dict = None, relation_aware: bool = False, max_items: int = None) -> list:
     """Builds schema linker inputs for a single question. Splits the database schema into multiple
     chunks if the full schema exceeds the context window size.
 
@@ -401,8 +409,8 @@ def create_schema_linker_input(tables_ddl_canditates: list, question_text: str, 
     if tokenizer is not None and context_window is None:
         raise ValueError("context_window is required when a tokenizer is given")
 
-    trial = _pack_tables_into_chunks(tables_ddl_canditates, question_text, context_window, db_id, tokenizer)
-    if len(trial) <= 1:
+    trial = _pack_tables_into_chunks(tables_ddl_canditates, question_text, context_window, db_id, tokenizer, overflow_stats, max_items)
+    if not relation_aware or len(trial) <= 1:
         return trial
 
     components = group_tables_by_fk_component(tables_ddl_canditates)

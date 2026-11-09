@@ -48,14 +48,14 @@ def get_gold_tables_ddls(item: dict) -> list:
     return tables
 
 
-def get_spider_ent_data(tokenizer=None, max_tokens=None, overflow_stats: dict = None):
+def get_spider_ent_data(tokenizer=None, max_tokens=None, overflow_stats: dict = None, max_items: int = None) -> list[dict]:
     schema_linker_inputs = []
 
     for q in spider_ent:
         db_ddls_and_candidates = schema_with_parsed_candidates.get(q['data_asset'])
-        schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, q['data_asset'], tokenizer, overflow_stats)
+        schema_linker_input = create_schema_linker_input(db_ddls_and_candidates, q['question'], max_tokens, q['data_asset'], tokenizer, overflow_stats, False, max_items)
         gold_schema = get_ent_gold_schema(q)
-        schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema})
+        schema_linker_inputs.append({"input": schema_linker_input, "gold_schema": gold_schema, "sql": q['original_SQL'], "question": q['question'], "db": q['data_asset'], "db_schema": db_ddls_and_candidates })
     return schema_linker_inputs
 
 def get_ent_gold_schema(question: dict) -> dict[str, list]:

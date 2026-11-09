@@ -3,3 +3,10 @@
 .idea__pycache__/
 *.pyc
 .venv/
+.env
+.gitignore
+.idea
+docs
+models
+notes
+schema_linking.egg-info
