@@ -48,7 +48,8 @@ def _install_quantization_patch():
 class MammothDecider:
     def __init__(self, model_dir=None, device="cuda:0"):
         model_dir = str(Path(model_dir or os.environ.get("MAMMOTH_MODEL_DIR") or "~/mammoth-1").expanduser())
-        bf16 = torch.cuda.is_available() and torch.cuda.is_bf16_supported()
+        # is_bf16_supported() ist auf der V100 wegen Emulation True -> native Unterstuetzung ueber sm_80+ pruefen
+        bf16 = torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8
         if not bf16:
             _install_quantization_patch()
         from qev.engine import DecisionEngine  # nach dem Patch importieren
