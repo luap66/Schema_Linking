@@ -1,7 +1,9 @@
 """In-Process-Zugriff auf Mammoth (qev.DecisionEngine) fuer run_mammoth_test.py.
 
 Abgeleitet aus ~/test_mammoth.py. Quantisierung (quant bzw. Umgebungsvariable MAMMOTH_QUANT):
-  auto (Standard): V100 (kein natives BF16, sm_70) -> 4-bit NF4 + float16; A100/H100 (sm_80+) -> BF16 ohne Quantisierung
+  auto (Standard): A100/H100 (sm_80+) -> BF16 ohne Quantisierung; GPU ohne natives BF16 (V100, sm_70) -> float16 ohne
+                   Quantisierung, wenn die Gewichte hoechstens 65% des VRAM belegen (Elephant 9B: ja), sonst 4-bit NF4
+                   (Mammoth 27B: ja)
   nf4:             immer 4-bit NF4 + float16 (auch auf A100/H100)
   none:            nie quantisieren (auf der V100 reichen 32 GB dafuer nicht -> OOM)
 
@@ -12,7 +14,7 @@ state:     str oder dict (z.B. {"question":..., "schema":..., "rules":...})
 questions: {name: {"type": "noul", "instructions": "..."}}
 Zu lange Requests (> ~16k Tokens) wirft die Engine als ValueError; hier wird nicht gekuerzt.
 
-Modellordner: MAMMOTH_MODEL_DIR (Standard ~/mammoth-1).
+Modellordner: MAMMOTH_MODEL_DIR (Standard ~/mammoth-1). Funktioniert fuer jedes Modell mit der qev-Engine (Mammoth, Elephant).
 """
 import json
 import os
@@ -55,7 +57,9 @@ class MammothDecider:
         quant = (quant or os.environ.get("MAMMOTH_QUANT") or "auto").lower()
         if quant not in ("auto", "nf4", "none"):
             raise ValueError(f"quant muss auto, nf4 oder none sein, nicht {quant!r}")
-        use_nf4 = quant == "nf4" or (quant == "auto" and not native_bf16)
+        weights_gb = sum(f.stat().st_size for f in Path(model_dir).glob("*.safetensors")) / 1e9
+        vram_gb = torch.cuda.get_device_properties(0).total_memory / 1e9 if torch.cuda.is_available() else 0
+        use_nf4 = quant == "nf4" or (quant == "auto" and not native_bf16 and weights_gb > 0.65 * vram_gb)
         if use_nf4:
             _install_quantization_patch()
         elif not native_bf16:
@@ -65,7 +69,7 @@ class MammothDecider:
         self._request_cls = SystemOneRequest
         self.engine = DecisionEngine(model_dir, device=device, dtype="bfloat16" if (native_bf16 and not use_nf4) else "float16")
         self.quantized = use_nf4
-        print(f"[mammoth] Quantisierung: {'4-bit NF4' if use_nf4 else 'keine'} (quant={quant})")
+        print(f"[mammoth] Quantisierung: {'4-bit NF4' if use_nf4 else 'keine'} (quant={quant}, Gewichte {weights_gb:.1f} GB, VRAM {vram_gb:.1f} GB)")
         try:
             from transformers import AutoTokenizer
             self.tokenizer = AutoTokenizer.from_pretrained(model_dir)  # fuer exaktes Chunking

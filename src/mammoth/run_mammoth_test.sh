@@ -45,6 +45,7 @@ run_setup() {
     [ -f "$SETUP_DIR/setup_mammoth.sh" ] || {
         echo "FEHLER: $1 und $SETUP_DIR/setup_mammoth.sh fehlt." >&2
         echo "        setup_mammoth.sh dorthin kopieren oder MAMMOTH_SETUP_DIR setzen." >&2
+        [ -f "$MAMMOTH_MODEL_DIR/setup.sh" ] && echo "        Alternative: das offizielle $MAMMOTH_MODEL_DIR/setup.sh (installiert die OneJev-Runtime in die aktive Python-Umgebung)." >&2
         exit 1
     }
     echo "Fuehre setup_mammoth.sh aus ..."

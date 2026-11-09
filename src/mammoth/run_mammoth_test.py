@@ -335,6 +335,7 @@ def main():
     ap.add_argument("--stage2-max-tokens", type=int, default=6000, help="nur mit --no-tokenizer")
     ap.add_argument("--quant", choices=["auto", "nf4", "none"], default="auto",
                     help="auto: V100 -> NF4, A100/H100 -> unquantisiert; nf4: immer 4-bit; none: nie quantisieren")
+    ap.add_argument("--model-name", default="mammoth", help="Name fuer Ergebnisdateien und Ausgabe (mammoth, elephant, ...)")
     ap.add_argument("--out-dir", default=str(REPO_ROOT / "results" / "mammoth"))
     ap.add_argument("--name", default=None, help="Dateiname der Ergebnisse (Standard aus sample/seed)")
     ap.add_argument("--resume", action="store_true", help="bereits fertige Fragen aus der .jsonl uebernehmen")
@@ -357,8 +358,8 @@ def main():
         m.tokenizer = None
     # NF4-Ergebnisse im Dateinamen kennzeichnen, damit sie nicht mit unquantisierten verwechselt werden
     suffix = "_nf4" if m.decider.quantized else ""
-    name = args.name or (f"spider_ent_mammoth_local_{args.sample}_samples_seed_{args.seed}{suffix}" if args.sample
-                         else f"spider_ent_mammoth_local_full{suffix}")
+    name = args.name or (f"spider_ent_{args.model_name}_local_{args.sample}_samples_seed_{args.seed}{suffix}" if args.sample
+                         else f"spider_ent_{args.model_name}_local_full{suffix}")
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     jsonl = out_dir / f"{name}.jsonl"
@@ -370,6 +371,7 @@ def main():
     elif jsonl.exists():
         jsonl.unlink()
 
+    print(f"Modell: {args.model_name}")
     print(f"Chunking: {'Tokenizer des Modells' if m.tokenizer is not None else 'Schaetzung chars/2.0 (Jev-identisch)'}")
     print(f"Modell geladen in {m.load_seconds:.1f} s; {len(data) - len(done)} Fragen offen")
     results = list(done)
