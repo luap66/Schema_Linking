@@ -46,14 +46,21 @@ TABLE_RULES = ("A table is needed if at least one of its columns is referenced i
 class Mammoth:
     """Duenner Wrapper um MammothDecider: einheitliches Rueckgabeformat, Zeitmessung, Split bei ValueError."""
 
-    def __init__(self):
+    def __init__(self, quant=None):
         from mammoth_decider import MammothDecider  # erst hier, damit --help ohne venv funktioniert
         t0 = time.perf_counter()
-        self.decider = MammothDecider()  # laedt das Modell (1-3 min)
+        self.decider = MammothDecider(quant=quant)  # laedt das Modell (1-3 min)
         self.load_seconds = time.perf_counter() - t0
+        self.tokenizer = getattr(self.decider, "tokenizer", None)
         self.n_requests = 0
         self.n_splits = 0
         self.request_seconds = []
+        self.request_tokens = []  # gezaehlte Tokens (State + Fragen) je Request, nur mit Tokenizer
+
+    def count_request_tokens(self, state, payload):
+        # Naeherung: Rohtext von State + Fragen, ohne Chat-Template/Sonderzeichen des Modells
+        text = (json.dumps(state) if isinstance(state, dict) else str(state)) + json.dumps(payload)
+        return len(self.tokenizer.encode(text))
 
     @staticmethod
     def _parse(raw, names):
@@ -73,6 +80,8 @@ class Mammoth:
         """questions: {name: instruction}. Gibt (probs, in_tokens, out_tokens) zurueck.
         Zu lange Requests (ValueError) werden ueber die Fragen halbiert."""
         payload = {n: {"type": "noul", "instructions": i} for n, i in questions.items()}
+        if self.tokenizer is not None:
+            self.request_tokens.append(self.count_request_tokens(state, payload))
         t0 = time.perf_counter()
         try:
             raw = self.decider.decide(state, payload)
@@ -105,17 +114,70 @@ def compact_table(t):
 
 
 def chunk_compact(tables, max_chars):
+    """Jev-identisch: greedy nach Zeichen (--no-tokenizer)."""
     chunks, current, size = [], [], 0
     for t in tables:
         line = compact_table(t)
-        if current and size + len(line) > max_chars:
+        n = len(line) + 1
+        if current and size + n > max_chars:
             chunks.append(current)
             current, size = [], 0
         current.append((t['candidates']['table'], line))
-        size += len(line) + 1
+        size += n
     if current:
         chunks.append(current)
     return chunks
+
+
+# Fester Overhead pro Request (JSON-Klammern, Feldnamen, Chat-Template) - grosszuegig geschaetzt
+REQUEST_OVERHEAD_TOKENS = 150
+# JSON-Geruest je Noul-Frage: {"type": "noul", "instructions": "..."} plus Trennzeichen
+QUESTION_OVERHEAD_TOKENS = 14
+
+
+def _question_cost(enc, name, instruction):
+    # Name steht zweimal im Request: als Schluessel und in der Instruktion
+    return enc(name) + enc(instruction) + QUESTION_OVERHEAD_TOKENS
+
+
+def _pack_by_tokens(costs, fixed, budget):
+    """Greedy: costs = [(item, tokens)], Budget = max. Tokens des ganzen Requests inkl. fixed.
+    Ein Item, das allein nicht passt, bekommt einen eigenen Chunk (nie zerschneiden)."""
+    chunks, current, size = [], [], fixed
+    for item, c in costs:
+        if current and size + c > budget:
+            chunks.append(current)
+            current, size = [], fixed
+        current.append(item)
+        size += c
+    if current:
+        chunks.append(current)
+    return chunks
+
+
+def chunk_stage1_tokens(tables, question, tokenizer, budget):
+    """Stufe 1 nach echten Mammoth-Request-Tokens: kompakte Zeile + Noul-Frage je Tabelle."""
+    enc = lambda text: len(tokenizer.encode(text))
+    fixed = enc(question) + enc(TABLE_RULES) + REQUEST_OVERHEAD_TOKENS
+    costs = []
+    for t in tables:
+        name, line = t['candidates']['table'], compact_table(t)
+        costs.append(((name, line), enc(line) + _question_cost(enc, name, f"Is table {name} needed for the SQL query?")))
+    return _pack_by_tokens(costs, fixed, budget)
+
+
+def chunk_stage2_tokens(tables, question, tokenizer, budget):
+    """Stufe 2 nach echten Mammoth-Request-Tokens: volle DDL + Noul-Frage je Spalte."""
+    enc = lambda text: len(tokenizer.encode(text))
+    fixed = enc(question) + enc(RULES) + REQUEST_OVERHEAD_TOKENS
+    costs = []
+    for t in tables:
+        name = t['candidates']['table']
+        cands = [f"{name}.{c}" for c in t['candidates']['columns']]
+        c = enc(t['ddl']) + sum(_question_cost(enc, x, f"Is column {x} referenced in the SQL query?") for x in cands)
+        costs.append(((t['ddl'], cands), c))
+    return [{"ddl": "\n".join(d for d, _ in grp), "candidate_strings": [x for _, cs in grp for x in cs]}
+            for grp in _pack_by_tokens(costs, fixed, budget)]
 
 
 def fk_neighbors(tables, selected):
@@ -130,15 +192,20 @@ def fk_neighbors(tables, selected):
     return neighbors - selected
 
 
-def run_question(m, q, table_threshold, include_fk_neighbors, stage1_max_chars, stage2_max_tokens):
+def run_question(m, q, table_threshold, include_fk_neighbors, args):
+    tok = m.tokenizer
     t_start = time.perf_counter()
     splits_before = m.n_splits
+    req_before = len(m.request_tokens)
     tok_in = tok_out = 0
 
     # Stufe 1: Tabellen
     t1 = time.perf_counter()
     table_scores = {}
-    stage1_chunks = chunk_compact(q['db_schema'], stage1_max_chars)
+    if tok is not None:
+        stage1_chunks = chunk_stage1_tokens(q['db_schema'], q['question'], tok, args.max_request_tokens)
+    else:
+        stage1_chunks = chunk_compact(q['db_schema'], args.stage1_max_chars)
     for chunk in stage1_chunks:
         probs, i, o = m.ask(
             {"question": q['question'], "schema": "\n".join(line for _, line in chunk), "rules": TABLE_RULES},
@@ -155,7 +222,10 @@ def run_question(m, q, table_threshold, include_fk_neighbors, stage1_max_chars, 
     # Stufe 2: Spalten der ausgewaehlten Tabellen
     t2 = time.perf_counter()
     col_scores = {}
-    stage2_chunks = _pack_tables_into_chunks(selected_tables, q['question'], stage2_max_tokens, q['db'])
+    if tok is not None:
+        stage2_chunks = chunk_stage2_tokens(selected_tables, q['question'], tok, args.max_request_tokens)
+    else:
+        stage2_chunks = _pack_tables_into_chunks(selected_tables, q['question'], args.stage2_max_tokens, q['db'])
     for chunk in stage2_chunks:
         probs, i, o = m.ask(
             {"question": q['question'], "schema": chunk['ddl'], "rules": RULES},
@@ -168,6 +238,7 @@ def run_question(m, q, table_threshold, include_fk_neighbors, stage1_max_chars, 
             "table_scores": table_scores, "selected_tables": sorted(selected),
             "n_chunks_stage1": len(stage1_chunks), "n_chunks_stage2": len(stage2_chunks),
             "n_splits": m.n_splits - splits_before,
+            "max_request_tokens": max(m.request_tokens[req_before:], default=None),
             "seconds": time.perf_counter() - t_start,
             "seconds_stage1": stage1_seconds, "seconds_stage2": stage2_seconds,
             "usage": {"input_tokens": tok_in, "output_tokens": tok_out},
@@ -238,6 +309,10 @@ def print_timing(results, mammoth):
     print(f"Sekunden/Frage: Mittel = {statistics.mean(secs):.2f}, Median = {statistics.median(secs):.2f}, "
           f"p95 = {p95:.2f}, max = {secs[-1]:.2f}  (Stufe 1 Mittel {statistics.mean(r['seconds_stage1'] for r in results):.2f}, "
           f"Stufe 2 Mittel {statistics.mean(r['seconds_stage2'] for r in results):.2f})")
+    if mammoth.request_tokens:
+        rt = sorted(mammoth.request_tokens)
+        print(f"Tokens/Request (State+Fragen, ca.): Mittel = {statistics.mean(rt):.0f}, p95 = {rt[min(len(rt) - 1, int(0.95 * len(rt)))]}, "
+              f"max = {rt[-1]} (Limit ~16384)")
     print(f"Gesamtzeit Fragen: {sum(secs):.1f} s; Modell laden: {mammoth.load_seconds:.1f} s (nicht in Sekunden/Frage enthalten)")
     if mammoth.request_seconds:
         print(f"Sekunden/Request: Mittel = {statistics.mean(mammoth.request_seconds):.2f} ({len(mammoth.request_seconds)} Requests)")
@@ -251,8 +326,15 @@ def main():
     ap.add_argument("--seed", type=int, default=42)
     ap.add_argument("--table-threshold", type=float, default=0.3)
     ap.add_argument("--fk-neighbors", action="store_true", help="FK-Nachbarn der gewaehlten Tabellen mit in Stufe 2 nehmen")
-    ap.add_argument("--stage1-max-chars", type=int, default=12000)
-    ap.add_argument("--stage2-max-tokens", type=int, default=6000)
+    ap.add_argument("--max-request-tokens", type=int, default=8000,
+                    help="Chunking mit Tokenizer (Standard): max. Tokens je Request (State + Noul-Fragen), Mammoth-Limit ~16k")
+    ap.add_argument("--no-tokenizer", action="store_true",
+                    help="Chunking exakt wie im Jev-Test: Stufe 1 nach Zeichen (--stage1-max-chars), Stufe 2 ExSL-Prompt "
+                         "mit Schaetzung chars/2.0 (--stage2-max-tokens)")
+    ap.add_argument("--stage1-max-chars", type=int, default=12000, help="nur mit --no-tokenizer")
+    ap.add_argument("--stage2-max-tokens", type=int, default=6000, help="nur mit --no-tokenizer")
+    ap.add_argument("--quant", choices=["auto", "nf4", "none"], default="auto",
+                    help="auto: V100 -> NF4, A100/H100 -> unquantisiert; nf4: immer 4-bit; none: nie quantisieren")
     ap.add_argument("--out-dir", default=str(REPO_ROOT / "results" / "mammoth"))
     ap.add_argument("--name", default=None, help="Dateiname der Ergebnisse (Standard aus sample/seed)")
     ap.add_argument("--resume", action="store_true", help="bereits fertige Fragen aus der .jsonl uebernehmen")
@@ -260,18 +342,23 @@ def main():
     args = ap.parse_args()
 
     if args.probe:
-        m = Mammoth()
+        m = Mammoth(args.quant)
         raw = m.decider.decide({"question": "How many singers are there?", "schema": "singer(id, name)"},
                                {"x": {"type": "noul", "instructions": "Is column singer.id referenced in the SQL query?"}})
         print("Rohantwort:", raw)
         print(f"Laden: {m.load_seconds:.1f} s")
         return
 
-    data = get_spider_ent_data(max_tokens=args.stage2_max_tokens)
+    data = get_spider_ent_data(max_tokens=None)  # input-Chunks werden nicht genutzt, wir chunken pro Frage selbst
     if args.sample:
         data = random.Random(args.seed).sample(data, args.sample)
-    name = args.name or (f"spider_ent_mammoth_local_{args.sample}_samples_seed_{args.seed}" if args.sample
-                         else "spider_ent_mammoth_local_full")
+    m = Mammoth(args.quant)
+    if args.no_tokenizer:
+        m.tokenizer = None
+    # NF4-Ergebnisse im Dateinamen kennzeichnen, damit sie nicht mit unquantisierten verwechselt werden
+    suffix = "_nf4" if m.decider.quantized else ""
+    name = args.name or (f"spider_ent_mammoth_local_{args.sample}_samples_seed_{args.seed}{suffix}" if args.sample
+                         else f"spider_ent_mammoth_local_full{suffix}")
     out_dir = Path(args.out_dir)
     out_dir.mkdir(parents=True, exist_ok=True)
     jsonl = out_dir / f"{name}.jsonl"
@@ -283,14 +370,14 @@ def main():
     elif jsonl.exists():
         jsonl.unlink()
 
-    m = Mammoth()
+    print(f"Chunking: {'Tokenizer des Modells' if m.tokenizer is not None else 'Schaetzung chars/2.0 (Jev-identisch)'}")
     print(f"Modell geladen in {m.load_seconds:.1f} s; {len(data) - len(done)} Fragen offen")
     results = list(done)
     errors = []
     with open(jsonl, "a", encoding="utf-8") as f:
         for idx, q in enumerate(data[len(done):], start=len(done) + 1):
             try:
-                r = run_question(m, q, args.table_threshold, args.fk_neighbors, args.stage1_max_chars, args.stage2_max_tokens)
+                r = run_question(m, q, args.table_threshold, args.fk_neighbors, args)
             except Exception as e:  # z.B. ein Request, der auch nach dem Split zu lang ist -> Frage auslassen, Lauf fortsetzen
                 errors.append({"question": q['question'], "db_id": q['db'], "error": repr(e)})
                 print(f"[{idx}/{len(data)}] FEHLER (Frage ausgelassen): {e!r}")

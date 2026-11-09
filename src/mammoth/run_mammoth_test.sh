@@ -14,6 +14,9 @@
 #   MAMMOTH_MODEL_DIR  Ordner der Gewichte    (Standard: ~/mammoth-1, sonst $MAMMOTH_HOME)
 #   MAMMOTH_HOME       Installationsordner    (Standard: /mnt/data/$USER/mammoth)
 #   MAMMOTH_SETUP_DIR  Ordner mit setup_mammoth.sh (nur fuer die Neuinstallation noetig)
+#   MAMMOTH_MODEL_SOURCE  fehlt das Modell: von hier per rsync holen (z.B. user@gpu-v100s-01:~/mammoth-1)
+#   MAMMOTH_MODEL_REPO    fehlt das Modell: von diesem Hugging-Face-Repo laden (HF_TOKEN falls privat)
+#   MAMMOTH_QUANT      auto (Standard) | nf4 | none  (oder --quant am Skript)
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -33,27 +36,52 @@ model_present() {
     [ -f "$MAMMOTH_MODEL_DIR/config.json" ] && ls "$MAMMOTH_MODEL_DIR"/*.safetensors >/dev/null 2>&1
 }
 
-is_installed() {
+runtime_ok() {
     [ -x "$VENV_PY" ] || { echo "-> venv fehlt ($VENV_PY)"; return 1; }
-    model_present || { echo "-> Modellgewichte fehlen in $MAMMOTH_MODEL_DIR"; return 1; }
-    "$VENV_PY" -c "import torch, transformers, qev.engine, qev.schema" 2>/dev/null \
-        || { echo "-> torch/transformers/qev (OneJev-Runtime) nicht importierbar"; return 1; }
+    "$VENV_PY" -c "import torch, transformers, qev.engine, qev.schema" 2>/dev/null         || { echo "-> torch/transformers/qev (OneJev-Runtime) nicht importierbar"; return 1; }
 }
 
-echo "Pruefe Mammoth-Installation (venv=$MAMMOTH_VENV, Modell=$MAMMOTH_MODEL_DIR) ..."
-if [ "${REINSTALL:-0}" = "1" ] || ! is_installed; then
+run_setup() {
     [ -f "$SETUP_DIR/setup_mammoth.sh" ] || {
-        echo "FEHLER: Mammoth ist nicht (vollstaendig) installiert und $SETUP_DIR/setup_mammoth.sh fehlt." >&2
+        echo "FEHLER: $1 und $SETUP_DIR/setup_mammoth.sh fehlt." >&2
         echo "        setup_mammoth.sh dorthin kopieren oder MAMMOTH_SETUP_DIR setzen." >&2
         exit 1
     }
-    echo "Installiere Mammoth (setup_mammoth.sh) ..."
+    echo "Fuehre setup_mammoth.sh aus ..."
     mkdir -p "$MAMMOTH_HOME"
     bash "$SETUP_DIR/setup_mammoth.sh"
-    is_installed || { echo "FEHLER: Installation unvollstaendig, siehe Ausgabe oben" >&2; exit 1; }
-else
-    echo "Mammoth ist installiert."
+    SETUP_DONE=1
+}
+
+# Modell holen: 1) MAMMOTH_MODEL_SOURCE (rsync-Quelle, z.B. user@host:~/mammoth-1)
+#               2) MAMMOTH_MODEL_REPO (Hugging-Face-Repo, optional mit HF_TOKEN)
+#               3) setup_mammoth.sh
+download_model() {
+    mkdir -p "$MAMMOTH_MODEL_DIR"
+    if [ -n "${MAMMOTH_MODEL_SOURCE:-}" ]; then
+        echo "Kopiere Modell von $MAMMOTH_MODEL_SOURCE nach $MAMMOTH_MODEL_DIR ..."
+        rsync -a --partial --info=progress2 "${MAMMOTH_MODEL_SOURCE%/}/" "$MAMMOTH_MODEL_DIR/"
+    elif [ -n "${MAMMOTH_MODEL_REPO:-}" ]; then
+        [ -x "$VENV_PY" ] || { echo "FEHLER: venv fehlt fuer den Download" >&2; exit 1; }
+        echo "Lade Modell $MAMMOTH_MODEL_REPO nach $MAMMOTH_MODEL_DIR ..."
+        "$VENV_PY" -c "from huggingface_hub import snapshot_download; snapshot_download('$MAMMOTH_MODEL_REPO', local_dir='$MAMMOTH_MODEL_DIR')"
+    else
+        run_setup "Modellgewichte fehlen in $MAMMOTH_MODEL_DIR, und weder MAMMOTH_MODEL_SOURCE noch MAMMOTH_MODEL_REPO ist gesetzt"
+    fi
+}
+
+SETUP_DONE=0
+echo "Pruefe Mammoth-Installation (venv=$MAMMOTH_VENV, Modell=$MAMMOTH_MODEL_DIR) ..."
+if [ "${REINSTALL:-0}" = "1" ] || ! runtime_ok; then
+    run_setup "Runtime (venv/OneJev) fehlt"
+    runtime_ok || { echo "FEHLER: Runtime nach dem Setup nicht nutzbar, siehe Ausgabe oben" >&2; exit 1; }
 fi
+if ! model_present; then
+    echo "-> Modellgewichte fehlen in $MAMMOTH_MODEL_DIR"
+    [ "$SETUP_DONE" = "1" ] || download_model
+    model_present || { echo "FEHLER: Modellgewichte nach dem Download nicht vollstaendig vorhanden" >&2; exit 1; }
+fi
+echo "Mammoth ist installiert."
 
 # Zusatzpakete fuer den Test (torch/transformers bleiben unangetastet)
 if ! "$VENV_PY" -c "import mo_sql_parsing" 2>/dev/null; then

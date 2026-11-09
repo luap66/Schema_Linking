@@ -1,7 +1,9 @@
 """In-Process-Zugriff auf Mammoth (qev.DecisionEngine) fuer run_mammoth_test.py.
 
-Abgeleitet aus ~/test_mammoth.py: Auf GPUs ohne BF16 (V100, sm_70) wird beim Laden automatisch auf
-4-bit NF4 + float16 umgestellt, auf A100/H100 laeuft BF16 ohne Quantisierung.
+Abgeleitet aus ~/test_mammoth.py. Quantisierung (quant bzw. Umgebungsvariable MAMMOTH_QUANT):
+  auto (Standard): V100 (kein natives BF16, sm_70) -> 4-bit NF4 + float16; A100/H100 (sm_80+) -> BF16 ohne Quantisierung
+  nf4:             immer 4-bit NF4 + float16 (auch auf A100/H100)
+  none:            nie quantisieren (auf der V100 reichen 32 GB dafuer nicht -> OOM)
 
     decider = MammothDecider()            # laedt das Modell (1-3 min)
     decider.decide(state, questions)      # -> {"answers": {name: {"noul": p}}, "usage": {...}}
@@ -46,17 +48,30 @@ def _install_quantization_patch():
 
 
 class MammothDecider:
-    def __init__(self, model_dir=None, device="cuda:0"):
+    def __init__(self, model_dir=None, device="cuda:0", quant=None):
         model_dir = str(Path(model_dir or os.environ.get("MAMMOTH_MODEL_DIR") or "~/mammoth-1").expanduser())
         # is_bf16_supported() ist auf der V100 wegen Emulation True -> native Unterstuetzung ueber sm_80+ pruefen
-        bf16 = torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8
-        if not bf16:
+        native_bf16 = torch.cuda.is_available() and torch.cuda.get_device_capability()[0] >= 8
+        quant = (quant or os.environ.get("MAMMOTH_QUANT") or "auto").lower()
+        if quant not in ("auto", "nf4", "none"):
+            raise ValueError(f"quant muss auto, nf4 oder none sein, nicht {quant!r}")
+        use_nf4 = quant == "nf4" or (quant == "auto" and not native_bf16)
+        if use_nf4:
             _install_quantization_patch()
+        elif not native_bf16:
+            print("[warn] GPU ohne natives BF16 und ohne Quantisierung: lade in float16, wahrscheinlich zu gross fuer den VRAM")
         from qev.engine import DecisionEngine  # nach dem Patch importieren
         from qev.schema import SystemOneRequest
         self._request_cls = SystemOneRequest
-        self.engine = DecisionEngine(model_dir, device=device, dtype="bfloat16" if bf16 else "float16")
-        self.quantized = not bf16
+        self.engine = DecisionEngine(model_dir, device=device, dtype="bfloat16" if (native_bf16 and not use_nf4) else "float16")
+        self.quantized = use_nf4
+        print(f"[mammoth] Quantisierung: {'4-bit NF4' if use_nf4 else 'keine'} (quant={quant})")
+        try:
+            from transformers import AutoTokenizer
+            self.tokenizer = AutoTokenizer.from_pretrained(model_dir)  # fuer exaktes Chunking
+        except Exception as e:
+            print(f"[warn] Tokenizer nicht ladbar, Chunking schaetzt chars/2.0: {e}")
+            self.tokenizer = None
         self._lock = threading.Lock()  # eine GPU: Requests serialisieren
         self._state_as_text = False
 
