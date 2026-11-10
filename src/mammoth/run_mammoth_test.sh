@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Startet den Mammoth-Test auf dem ICC-GPU-Host. Prueft vorher, ob Mammoth installiert ist
-# (venv, Modellgewichte, importierbare Engine) und fuehrt sonst setup_mammoth.sh aus (falls vorhanden).
+# (venv, Modellgewichte, importierbare Engine) und installiert sonst selbst: venv anlegen, Modell holen, Runtime via setup_mammoth.sh oder $MODELL/setup.sh.
 #
 #   bash run_mammoth_test.sh                 # 30 Fragen, seed 42 (wie Jev-Test)
 #   bash run_mammoth_test.sh --sample 0      # alle Spider-Ent-Fragen
@@ -41,16 +41,37 @@ runtime_ok() {
     "$VENV_PY" -c "import torch, transformers, qev.engine, qev.schema" 2>/dev/null         || { echo "-> torch/transformers/qev (OneJev-Runtime) nicht importierbar"; return 1; }
 }
 
+ensure_venv() {
+    [ -x "$VENV_PY" ] && return 0
+    echo "Lege venv an: $MAMMOTH_VENV ..."
+    mkdir -p "$(dirname "$MAMMOTH_VENV")"
+    if command -v uv >/dev/null 2>&1; then
+        uv venv "$MAMMOTH_VENV"
+    else
+        python3 -m venv "$MAMMOTH_VENV" || { echo "FEHLER: venv konnte nicht angelegt werden (python3-venv fehlt?)" >&2; exit 1; }
+    fi
+}
+
+pip_install() {
+    if command -v uv >/dev/null 2>&1; then uv pip install --python "$VENV_PY" "$@"; else "$VENV_PY" -m pip install "$@"; fi
+}
+
+# Runtime installieren: 1) setup_mammoth.sh (falls vorhanden), 2) offizielles setup.sh im Modellordner
+# (installiert die OneJev-Runtime in die aktive Umgebung, daher mit aktiviertem venv).
 run_setup() {
-    [ -f "$SETUP_DIR/setup_mammoth.sh" ] || {
-        echo "FEHLER: $1 und $SETUP_DIR/setup_mammoth.sh fehlt." >&2
-        echo "        setup_mammoth.sh dorthin kopieren oder MAMMOTH_SETUP_DIR setzen." >&2
-        [ -f "$MAMMOTH_MODEL_DIR/setup.sh" ] && echo "        Alternative: das offizielle $MAMMOTH_MODEL_DIR/setup.sh (installiert die OneJev-Runtime in die aktive Python-Umgebung)." >&2
-        exit 1
-    }
-    echo "Fuehre setup_mammoth.sh aus ..."
     mkdir -p "$MAMMOTH_HOME"
-    bash "$SETUP_DIR/setup_mammoth.sh"
+    if [ -f "$SETUP_DIR/setup_mammoth.sh" ]; then
+        echo "Fuehre setup_mammoth.sh aus ..."
+        bash "$SETUP_DIR/setup_mammoth.sh"
+    elif [ -f "$MAMMOTH_MODEL_DIR/setup.sh" ]; then
+        ensure_venv
+        echo "Fuehre $MAMMOTH_MODEL_DIR/setup.sh im venv $MAMMOTH_VENV aus ..."
+        ( export VIRTUAL_ENV="$MAMMOTH_VENV" PATH="$MAMMOTH_VENV/bin:$PATH"; unset PYTHONHOME; cd "$MAMMOTH_MODEL_DIR" && bash ./setup.sh )
+    else
+        echo "FEHLER: $1" >&2
+        echo "        Weder $SETUP_DIR/setup_mammoth.sh noch $MAMMOTH_MODEL_DIR/setup.sh vorhanden." >&2
+        exit 1
+    fi
     SETUP_DONE=1
 }
 
@@ -67,20 +88,26 @@ download_model() {
         echo "Lade Modell $MAMMOTH_MODEL_REPO nach $MAMMOTH_MODEL_DIR ..."
         "$VENV_PY" -c "from huggingface_hub import snapshot_download; snapshot_download('$MAMMOTH_MODEL_REPO', local_dir='$MAMMOTH_MODEL_DIR')"
     else
-        run_setup "Modellgewichte fehlen in $MAMMOTH_MODEL_DIR, und weder MAMMOTH_MODEL_SOURCE noch MAMMOTH_MODEL_REPO ist gesetzt"
+        if [ -f "$SETUP_DIR/setup_mammoth.sh" ]; then
+            run_setup "Modellgewichte fehlen"
+        else
+            echo "FEHLER: Modellgewichte fehlen in $MAMMOTH_MODEL_DIR." >&2
+            echo "        MAMMOTH_MODEL_SOURCE=user@host:~/mammoth-1 (rsync) oder MAMMOTH_MODEL_REPO=<hf-repo> setzen." >&2
+            exit 1
+        fi
     fi
 }
 
 SETUP_DONE=0
 echo "Pruefe Mammoth-Installation (venv=$MAMMOTH_VENV, Modell=$MAMMOTH_MODEL_DIR) ..."
+if ! model_present; then
+    echo "-> Modellgewichte fehlen in $MAMMOTH_MODEL_DIR"
+    download_model
+    model_present || { echo "FEHLER: Modellgewichte nach dem Download nicht vollstaendig vorhanden" >&2; exit 1; }
+fi
 if [ "${REINSTALL:-0}" = "1" ] || ! runtime_ok; then
     run_setup "Runtime (venv/OneJev) fehlt"
     runtime_ok || { echo "FEHLER: Runtime nach dem Setup nicht nutzbar, siehe Ausgabe oben" >&2; exit 1; }
-fi
-if ! model_present; then
-    echo "-> Modellgewichte fehlen in $MAMMOTH_MODEL_DIR"
-    [ "$SETUP_DONE" = "1" ] || download_model
-    model_present || { echo "FEHLER: Modellgewichte nach dem Download nicht vollstaendig vorhanden" >&2; exit 1; }
 fi
 echo "Mammoth ist installiert."
 

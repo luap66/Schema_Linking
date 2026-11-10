@@ -63,7 +63,8 @@ class MammothDecider:
         if use_nf4:
             _install_quantization_patch()
         elif not native_bf16:
-            print("[warn] GPU ohne natives BF16 und ohne Quantisierung: lade in float16, wahrscheinlich zu gross fuer den VRAM")
+            note = " (Gewichte belegen ueber 65% des VRAM, wahrscheinlich OOM)" if weights_gb > 0.65 * vram_gb else ""
+            print(f"[mammoth] GPU ohne natives BF16: lade unquantisiert in float16{note}")
         from qev.engine import DecisionEngine  # nach dem Patch importieren
         from qev.schema import SystemOneRequest
         self._request_cls = SystemOneRequest
