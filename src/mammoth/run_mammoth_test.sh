@@ -15,7 +15,7 @@
 #   MAMMOTH_HOME       Installationsordner    (Standard: /mnt/data/$USER/mammoth)
 #   MAMMOTH_SETUP_DIR  Ordner mit setup_mammoth.sh (nur fuer die Neuinstallation noetig)
 #   MAMMOTH_MODEL_SOURCE  fehlt das Modell: von hier per rsync holen (z.B. user@gpu-v100s-01:~/mammoth-1)
-#   MAMMOTH_MODEL_REPO    fehlt das Modell: von diesem Hugging-Face-Repo laden (HF_TOKEN falls privat)
+#   MAMMOTH_MODEL_REPO    fehlt das Modell: von diesem Hugging-Face-Repo laden (Standard: baselabs/mammoth-1)
 #   MAMMOTH_QUANT      auto (Standard) | nf4 | none  (oder --quant am Skript)
 set -euo pipefail
 
@@ -30,6 +30,7 @@ if [ -z "${MAMMOTH_MODEL_DIR:-}" ]; then
     if [ -f "$HOME/mammoth-1/config.json" ]; then MAMMOTH_MODEL_DIR="$HOME/mammoth-1"; else MAMMOTH_MODEL_DIR="$MAMMOTH_HOME"; fi
 fi
 export MAMMOTH_VENV MAMMOTH_MODEL_DIR
+export MAMMOTH_MODEL_REPO="${MAMMOTH_MODEL_REPO:-baselabs/mammoth-1}"
 VENV_PY="$MAMMOTH_VENV/bin/python"
 
 model_present() {
@@ -65,8 +66,22 @@ run_setup() {
         bash "$SETUP_DIR/setup_mammoth.sh"
     elif [ -f "$MAMMOTH_MODEL_DIR/setup.sh" ]; then
         ensure_venv
-        echo "Fuehre $MAMMOTH_MODEL_DIR/setup.sh im venv $MAMMOTH_VENV aus ..."
-        ( export VIRTUAL_ENV="$MAMMOTH_VENV" PATH="$MAMMOTH_VENV/bin:$PATH"; unset PYTHONHOME; cd "$MAMMOTH_MODEL_DIR" && bash ./setup.sh )
+        # setup.sh erwartet das Image pytorch/pytorch:2.8.0-cuda12.8 (torch + torchvision schon da) und behaelt dessen Build.
+        if ! "$VENV_PY" -c "import torch, torchvision" 2>/dev/null; then
+            echo "Installiere torch 2.8.0 + torchvision 0.23.0 (CUDA 12.8) ..."
+            pip_install torch==2.8.0 torchvision==0.23.0 --index-url "${TORCH_INDEX_URL:-https://download.pytorch.org/whl/cu128}"
+        fi
+        command -v git >/dev/null || { echo "FEHLER: git fehlt (setup.sh klont OneJev und decision-index)" >&2; exit 1; }
+        # setup.sh abgeaendert: causal-conv1d ist optional (braucht nvcc), Fehler dort nicht fatal; pip fehlt im uv-venv
+        local ws="$MAMMOTH_HOME/runtime"; mkdir -p "$ws"
+        local patched="$MAMMOTH_MODEL_DIR/.setup_run.sh"
+        sed -e 's|^\(pip install .*causal-conv1d\)$|\1 \|\| echo "WARNUNG: causal-conv1d nicht installiert (PyTorch-Fallback)"|' \
+            -e 's|^B=\$(cd "\$(dirname "\$0")" && pwd)|B="'"$MAMMOTH_MODEL_DIR"'"|' \
+            "$MAMMOTH_MODEL_DIR/setup.sh" > "$patched"
+        "$VENV_PY" -m pip --version >/dev/null 2>&1 || "$VENV_PY" -m ensurepip --upgrade >/dev/null 2>&1 || pip_install pip
+        echo "Fuehre setup.sh im venv $MAMMOTH_VENV aus (Arbeitsordner $ws) ..."
+        ( export VIRTUAL_ENV="$MAMMOTH_VENV" PATH="$MAMMOTH_VENV/bin:$PATH"; unset PYTHONHOME; bash "$patched" "$ws" )
+        rm -f "$patched"
     else
         echo "FEHLER: $1" >&2
         echo "        Weder $SETUP_DIR/setup_mammoth.sh noch $MAMMOTH_MODEL_DIR/setup.sh vorhanden." >&2
@@ -84,7 +99,8 @@ download_model() {
         echo "Kopiere Modell von $MAMMOTH_MODEL_SOURCE nach $MAMMOTH_MODEL_DIR ..."
         rsync -a --partial --info=progress2 "${MAMMOTH_MODEL_SOURCE%/}/" "$MAMMOTH_MODEL_DIR/"
     elif [ -n "${MAMMOTH_MODEL_REPO:-}" ]; then
-        [ -x "$VENV_PY" ] || { echo "FEHLER: venv fehlt fuer den Download" >&2; exit 1; }
+        ensure_venv
+        "$VENV_PY" -c "import huggingface_hub" 2>/dev/null || pip_install huggingface_hub
         echo "Lade Modell $MAMMOTH_MODEL_REPO nach $MAMMOTH_MODEL_DIR ..."
         "$VENV_PY" -c "from huggingface_hub import snapshot_download; snapshot_download('$MAMMOTH_MODEL_REPO', local_dir='$MAMMOTH_MODEL_DIR')"
     else
