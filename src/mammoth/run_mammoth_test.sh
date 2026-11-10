@@ -80,7 +80,8 @@ run_setup() {
             "$MAMMOTH_MODEL_DIR/setup.sh" > "$patched"
         "$VENV_PY" -m pip --version >/dev/null 2>&1 || "$VENV_PY" -m ensurepip --upgrade >/dev/null 2>&1 || pip_install pip
         echo "Fuehre setup.sh im venv $MAMMOTH_VENV aus (Arbeitsordner $ws) ..."
-        ( export VIRTUAL_ENV="$MAMMOTH_VENV" PATH="$MAMMOTH_VENV/bin:$PATH"; unset PYTHONHOME; bash "$patched" "$ws" )
+        # /mnt/data gehoert laut git einem anderen Nutzer ("dubious ownership"): safe.directory nur fuer diesen Aufruf, ohne globale Config
+        ( export VIRTUAL_ENV="$MAMMOTH_VENV" PATH="$MAMMOTH_VENV/bin:$PATH" GIT_CONFIG_COUNT=1 GIT_CONFIG_KEY_0=safe.directory GIT_CONFIG_VALUE_0="*"; unset PYTHONHOME; bash "$patched" "$ws" )
         rm -f "$patched"
     else
         echo "FEHLER: $1" >&2
